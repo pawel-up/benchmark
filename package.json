@@ -1,0 +1,114 @@
+{
+  "name": "@pawel-up/benchmark",
+  "version": "1.0.0",
+  "description": "TypeScript benchmarking library",
+  "license": "MIT",
+  "main": "./build/src/index.js",
+  "module": "./build/src/index.js",
+  "types": "./build/src/index.d.ts",
+  "type": "module",
+  "keywords": [
+    "benchmark",
+    "testing"
+  ],
+  "author": {
+    "name": "Pawel Uchida-Psztyc"
+  },
+  "contributors": [
+    "Your name can be here!"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pawel-up/benchmark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pawel-up/benchmark/issues"
+  },
+  "scripts": {
+    "build": "npm run build:ts && npm run lint",
+    "build:ts": "wireit",
+    "prepublish": "tsc",
+    "lint": "npm run lint:prettier && npm run lint:eslint",
+    "lint:eslint": "wireit",
+    "lint:prettier": "wireit",
+    "format": "npm run format:prettier && npm run format:prettier",
+    "format:prettier": "wireit",
+    "format:eslint": "wireit",
+    "test": "node --import ts-node-maintained/register/esm --enable-source-maps bin/test.ts",
+    "test:coverage": "c8 --reporter lcov --reporter text node --import ts-node-maintained/register/esm --enable-source-maps bin/test.ts",
+    "prepare": "husky"
+  },
+  "wireit": {
+    "lint:eslint": {
+      "command": "eslint --color --cache --cache-location .eslintcache .",
+      "files": [
+        "src/**/*.ts",
+        "eslint.config.js"
+      ],
+      "output": []
+    },
+    "lint:prettier": {
+      "command": "prettier \"**/*.ts\" --check"
+    },
+    "format:eslint": {
+      "command": "eslint --color --cache --fix --cache-location .eslintcache .",
+      "files": [
+        "src/**/*.ts",
+        "eslint.config.js"
+      ],
+      "output": []
+    },
+    "format:prettier": {
+      "command": "prettier \"**/*.ts\" --write"
+    },
+    "build:ts": {
+      "command": "tsc --project tsconfig.json",
+      "clean": "if-file-deleted",
+      "files": [
+        "src/**/*.ts",
+        "tsconfig.json"
+      ],
+      "output": [
+        "build/**",
+        ".tsbuildinfo"
+      ]
+    }
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "console-table-printer": "^2.12.1",
+    "tslog": "^4.9.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/js": "^9.25.0",
+    "@japa/assert": "^4.0.1",
+    "@japa/runner": "^4.2.0",
+    "@types/sinon": "^17.0.4",
+    "c8": "^10.1.3",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-no-only-tests": "^3.3.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
+    "sinon": "^20.0.0",
+    "ts-node-maintained": "^10.9.5",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "wireit": "^0.14.12"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix"
+    ]
+  }
+}

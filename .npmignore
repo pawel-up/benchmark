@@ -1,0 +1,17 @@
+bench
+node_modules
+tasks
+tests
+coverage
+bin
+docs
+.vscode
+.gitignore
+.github
+.husky
+.wireit
+.eslintcache
+.prettierignore
+.prettierrc.js
+commitlint.config.cjs
+eslint.config.js
