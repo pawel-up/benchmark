@@ -37,16 +37,16 @@ export type OutputHandler = (results: ComparisonResult[]) => void
  * @returns The comparison result.
  */
 export function compare(a: BenchmarkReport, b: BenchmarkReport): ComparisonResult {
-  const mean1 = a.sampleArithmeticMean
-  const mean2 = b.sampleArithmeticMean
-  const s1 = a.sampleStandardDeviation
-  const s2 = b.sampleStandardDeviation
-  const n1 = a.samples
-  const n2 = b.samples
-  const ops1 = a.operationsPerSecond
-  const ops2 = b.operationsPerSecond
-  const median1 = a.sampleMedian
-  const median2 = b.sampleMedian
+  const mean1 = a.mean
+  const mean2 = b.mean
+  const s1 = a.stddev
+  const s2 = b.stddev
+  const n1 = a.size
+  const n2 = b.size
+  const ops1 = a.ops
+  const ops2 = b.ops
+  const median1 = a.median
+  const median2 = b.median
 
   const tStarts = calculateTStatistic(mean1, mean2, s1, s2, n1, n2)
   const df = calculateDegreesOfFreedom(s1, s2, n1, n2)
@@ -64,29 +64,29 @@ export function compare(a: BenchmarkReport, b: BenchmarkReport): ComparisonResul
   const moe2 = marginOfError(s2, n2)
   const confidenceIntervalLower = diff - (moe1 + moe2)
   const confidenceIntervalUpper = diff + (moe1 + moe2)
-  const cohensD = calculateCohensD(mean1, mean2, s1, s2, n1, n2)
+  const cohensd = calculateCohensD(mean1, mean2, s1, s2, n1, n2)
   const standardErrorOfTheDifference = Math.sqrt(s1 ** 2 / n1 + s2 ** 2 / n2)
   const medianDifference = median2 - median1
   const medianDifferencePercent = (medianDifference / median1) * 100
 
   return {
-    reportA: a,
-    reportB: b,
-    tStatistic: tStarts,
-    degreesOfFreedom: df,
-    pValue: pValue,
-    isSignificantlyDifferent,
-    isReportAFaster,
-    meanDifference: diff,
-    meanDifferencePercent: diffPercent,
-    opsDifference: diffOps,
-    opsDifferencePercent: diffOpsPercent,
-    confidenceIntervalLower,
-    confidenceIntervalUpper,
-    cohensD,
-    standardErrorOfTheDifference,
-    medianDifference,
-    medianDifferencePercent,
+    a,
+    b,
+    ts: tStarts,
+    df,
+    p: pValue,
+    different: isSignificantlyDifferent,
+    aWins: isReportAFaster,
+    dmean: diff,
+    pmean: diffPercent,
+    dops: diffOps,
+    pops: diffOpsPercent,
+    lci: confidenceIntervalLower,
+    uci: confidenceIntervalUpper,
+    cohensd,
+    sed: standardErrorOfTheDifference,
+    dmedian: medianDifference,
+    pmedian: medianDifferencePercent,
   }
 }
 
@@ -188,10 +188,10 @@ export function compareFunction(
   const comparisonResults: ComparisonResult[] = []
   for (let i = 0; i < functionReports.length; i++) {
     for (let j = i + 1; j < functionReports.length; j++) {
-      const reportA = functionReports[i]
-      const reportB = functionReports[j]
-      log.info(`\n--- Comparing "${functionName}" in "${reportA.date}" vs "${reportB.date}" ---`)
-      const result = compare(reportA, reportB)
+      const a = functionReports[i]
+      const b = functionReports[j]
+      log.info(`\n--- Comparing "${functionName}" in "${a.date}" vs "${b.date}" ---`)
+      const result = compare(a, b)
       comparisonResults.push(result)
     }
   }
@@ -268,43 +268,41 @@ export function outputCompareFunction(results: ComparisonResult[], format: Outpu
  */
 const tableOutputHandler: OutputHandler = (results) => {
   for (const result of results) {
-    const { reportA, reportB } = result
-    console.info(`\nComparing "${reportA.name}" vs "${reportB.name}":`)
+    const { a, b } = result
+    console.info(`\nComparing "${a.name}" vs "${b.name}":`)
 
     console.info('\nStatistical Significance Test (Independent Two-Sample t-test):')
-    console.info(`  t-statistic: ${result.tStatistic.toFixed(4)}`)
-    console.info(`  Degrees of freedom: ${result.degreesOfFreedom.toFixed(2)}`)
-    console.info(`  p-value: ${result.pValue.toFixed(4)}`)
+    console.info(`  t-statistic: ${result.ts.toFixed(4)}`)
+    console.info(`  Degrees of freedom: ${result.df.toFixed(2)}`)
+    console.info(`  p-value: ${result.p.toFixed(4)}`)
 
     const alpha = 0.05
-    if (result.isSignificantlyDifferent) {
+    if (result.different) {
       console.info(
-        `  Conclusion: There is a statistically significant difference between "${reportA.name}" and "${reportB.name}" (p-value <= ${alpha}).`
+        `  Conclusion: There is a statistically significant difference between "${a.name}" and "${b.name}" (p-value <= ${alpha}).`
       )
-      if (result.isReportAFaster) {
-        console.info(`  "${reportA.name}" is ${chalk.green('significantly faster')} than "${reportB.name}".`)
+      if (result.aWins) {
+        console.info(`  "${a.name}" is ${chalk.green('significantly faster')} than "${b.name}".`)
       } else {
-        console.info(`  "${reportB.name}" is ${chalk.green('significantly faster')} than "${reportA.name}".`)
+        console.info(`  "${b.name}" is ${chalk.green('significantly faster')} than "${a.name}".`)
       }
     } else {
       console.info(
-        `  Conclusion: There is no statistically significant difference between "${reportA.name}" and "${reportB.name}" (p-value > ${alpha}).`
+        `  Conclusion: There is no statistically significant difference between "${a.name}" and "${b.name}" (p-value > ${alpha}).`
       )
     }
     console.info(`\nDifferences between runs:`)
-    console.info(`  Difference in mean execution time: ${result.meanDifference.toFixed(4)} secs`)
-    console.info(`  Percentage difference in mean execution time: ${result.meanDifferencePercent.toFixed(2)}%`)
-    console.info(`  Difference in operations per second: ${result.opsDifference.toFixed(2)} ops/sec`)
-    console.info(`  Percentage difference in operations per second: ${result.opsDifferencePercent.toFixed(2)}%`)
+    console.info(`  Difference in mean execution time: ${result.dmean.toFixed(4)} secs`)
+    console.info(`  Percentage difference in mean execution time: ${result.pmean.toFixed(2)}%`)
+    console.info(`  Difference in operations per second: ${result.dops.toFixed(2)} ops/sec`)
+    console.info(`  Percentage difference in operations per second: ${result.pops.toFixed(2)}%`)
 
     console.info(`\nConfidence Interval (95%):`)
-    console.info(
-      `  Difference in mean execution time: [${result.confidenceIntervalLower.toFixed(4)}, ${result.confidenceIntervalUpper.toFixed(4)}] secs`
-    )
-    console.info(`  Cohen's d: ${result.cohensD.toFixed(4)}`)
-    console.info(`  Standard Error of the Difference: ${result.standardErrorOfTheDifference.toFixed(4)}`)
-    console.info(`  Median difference: ${result.medianDifference.toFixed(4)} secs`)
-    console.info(`  Median difference percentage: ${result.medianDifferencePercent.toFixed(2)}%`)
+    console.info(`  Difference in mean execution time: [${result.lci.toFixed(4)}, ${result.uci.toFixed(4)}] secs`)
+    console.info(`  Cohen's d: ${result.cohensd.toFixed(4)}`)
+    console.info(`  Standard Error of the Difference: ${result.sed.toFixed(4)}`)
+    console.info(`  Median difference: ${result.dmedian.toFixed(4)} secs`)
+    console.info(`  Median difference percentage: ${result.pmedian.toFixed(2)}%`)
   }
 }
 
@@ -331,15 +329,15 @@ const csvOutputHandler: OutputHandler = (results) => {
 
   const rows = results.map(
     (result) =>
-      `${result.reportA.name},${result.reportA.date},${result.reportB.name},${result.reportB.date},${result.tStatistic.toFixed(
+      `${result.a.name},${result.a.date},${result.b.name},${result.b.date},${result.ts.toFixed(
         4
-      )},${result.degreesOfFreedom.toFixed(2)},${result.pValue.toFixed(4)},${result.isSignificantlyDifferent},${
-        result.isReportAFaster
-      },${result.meanDifference.toFixed(4)},${result.meanDifferencePercent.toFixed(2)}%,${result.opsDifference.toFixed(
+      )},${result.df.toFixed(2)},${result.p.toFixed(4)},${result.different},${
+        result.aWins
+      },${result.dmean.toFixed(4)},${result.pmean.toFixed(2)}%,${result.dops.toFixed(
         2
-      )},${result.opsDifferencePercent.toFixed(2)}%,${result.confidenceIntervalLower.toFixed(
+      )},${result.pops.toFixed(2)}%,${result.lci.toFixed(
         4
-      )},${result.confidenceIntervalUpper.toFixed(4)},${result.cohensD.toFixed(4)},${result.standardErrorOfTheDifference.toFixed(4)},${result.medianDifference.toFixed(4)},${result.medianDifferencePercent.toFixed(4)}%`
+      )},${result.uci.toFixed(4)},${result.cohensd.toFixed(4)},${result.sed.toFixed(4)},${result.dmedian.toFixed(4)},${result.pmedian.toFixed(4)}%`
   )
   console.info(header)
   console.info(rows.join('\n'))
@@ -379,23 +377,23 @@ export function compareSuites(suiteA: SuiteReport, suiteB: SuiteReport, options:
     suiteBMap.set(report.name, report)
   }
 
-  for (const reportA of suiteA.results) {
-    const reportB = suiteBMap.get(reportA.name)
+  for (const a of suiteA.results) {
+    const b = suiteBMap.get(a.name)
 
-    if (!reportB) {
-      log.warn(`  ${reportA.name}: Missing in suite "${suiteB.name}". Skipping.`)
+    if (!b) {
+      log.warn(`  ${a.name}: Missing in suite "${suiteB.name}". Skipping.`)
       continue
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(a, b)
 
-    let output = `  ${reportA.name}: `
+    let output = `  ${a.name}: `
 
-    if (result.isSignificantlyDifferent) {
-      if (result.isReportAFaster) {
-        output += chalk.green(`Improvement (${result.meanDifferencePercent.toFixed(2)}%)`)
+    if (result.different) {
+      if (result.aWins) {
+        output += chalk.green(`Improvement (${result.pmean.toFixed(2)}%)`)
       } else {
-        output += chalk.red(`Regression (${result.meanDifferencePercent.toFixed(2)}%)`)
+        output += chalk.red(`Regression (${result.pmean.toFixed(2)}%)`)
       }
     } else {
       output += `No significant difference`
@@ -405,9 +403,9 @@ export function compareSuites(suiteA: SuiteReport, suiteB: SuiteReport, options:
   }
 
   // Check for benchmarks in suiteB that are not in suiteA
-  for (const reportB of suiteB.results) {
-    if (!suiteA.results.find((report) => report.name === reportB.name)) {
-      log.warn(`  ${reportB.name}: Missing in suite "${suiteA.name}". Skipping.`)
+  for (const b of suiteB.results) {
+    if (!suiteA.results.find((report) => report.name === b.name)) {
+      log.warn(`  ${b.name}: Missing in suite "${suiteA.name}". Skipping.`)
     }
   }
 }

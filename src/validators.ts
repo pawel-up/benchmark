@@ -17,19 +17,19 @@ export function validateBenchmarkReport(report: BenchmarkReport): FieldValidatio
     return issues
   }
 
-  const requiredProperties = [
+  const requiredProperties: (keyof BenchmarkReport)[] = [
     'name',
-    'operationsPerSecond',
-    'samples',
-    'relativeMarginOfError',
-    'sampleStandardDeviation',
-    'marginOfError',
-    'sampleArithmeticMean',
-    'sampleVariance',
+    'ops',
+    'size',
+    'rme',
+    'stddev',
+    'me',
+    'mean',
+    'variance',
     'date',
   ]
 
-  const missing: string[] = requiredProperties.filter((prop) => !(prop in report))
+  const missing: (keyof BenchmarkReport)[] = requiredProperties.filter((prop) => !(prop in report))
   if (missing.length === 1) {
     issues.push({
       message: `Missing property "${missing[0]}".`,
@@ -52,58 +52,58 @@ export function validateBenchmarkReport(report: BenchmarkReport): FieldValidatio
     })
   }
 
-  if (typeof report.operationsPerSecond !== 'number' || report.operationsPerSecond < 0) {
+  if (typeof report.ops !== 'number' || report.ops < 0) {
     issues.push({
-      message: '"operationsPerSecond" must be a non-negative number.',
-      field: 'operationsPerSecond',
+      message: '"ops" must be a non-negative number.',
+      field: 'ops',
       rule: 'type',
     })
   }
 
-  if (typeof report.samples !== 'number' || report.samples < 0) {
+  if (typeof report.size !== 'number' || report.size < 0) {
     issues.push({
-      message: '"samples" must be a non-negative number.',
-      field: 'samples',
+      message: '"size" must be a non-negative number.',
+      field: 'size',
       rule: 'type',
     })
   }
 
-  if (typeof report.relativeMarginOfError !== 'number' || report.relativeMarginOfError < 0) {
+  if (typeof report.rme !== 'number' || report.rme < 0) {
     issues.push({
-      message: '"relativeMarginOfError" must be a non-negative number.',
-      field: 'relativeMarginOfError',
+      message: '"rme" must be a non-negative number.',
+      field: 'rme',
       rule: 'type',
     })
   }
 
-  if (typeof report.sampleStandardDeviation !== 'number' || report.sampleStandardDeviation < 0) {
+  if (typeof report.stddev !== 'number' || report.stddev < 0) {
     issues.push({
-      message: '"sampleStandardDeviation" must be a non-negative number.',
-      field: 'sampleStandardDeviation',
+      message: '"stddev" must be a non-negative number.',
+      field: 'stddev',
       rule: 'type',
     })
   }
 
-  if (typeof report.marginOfError !== 'number' || report.marginOfError < 0) {
+  if (typeof report.me !== 'number' || report.me < 0) {
     issues.push({
-      message: '"marginOfError" must be a non-negative number.',
-      field: 'marginOfError',
+      message: '"me" must be a non-negative number.',
+      field: 'me',
       rule: 'type',
     })
   }
 
-  if (typeof report.sampleArithmeticMean !== 'number' || report.sampleArithmeticMean < 0) {
+  if (typeof report.mean !== 'number' || report.mean < 0) {
     issues.push({
-      message: '"sampleArithmeticMean" must be a non-negative number.',
-      field: 'sampleArithmeticMean',
+      message: '"mean" must be a non-negative number.',
+      field: 'mean',
       rule: 'type',
     })
   }
 
-  if (typeof report.sampleVariance !== 'number' || report.sampleVariance < 0) {
+  if (typeof report.variance !== 'number' || report.variance < 0) {
     issues.push({
-      message: '"sampleVariance" must be a non-negative number.',
-      field: 'sampleVariance',
+      message: '"variance" must be a non-negative number.',
+      field: 'variance',
       rule: 'type',
     })
   }
@@ -135,7 +135,7 @@ export function validateSuiteReport(report: SuiteReport): FieldValidationMessage
     return issues
   }
 
-  const requiredProperties = ['kind', 'name', 'date', 'results']
+  const requiredProperties: (keyof SuiteReport)[] = ['kind', 'name', 'date', 'results']
   const missing = requiredProperties.filter((prop) => !(prop in report))
   if (missing.length === 1) {
     issues.push({

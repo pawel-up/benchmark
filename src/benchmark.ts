@@ -331,7 +331,7 @@ export class Benchmarker {
       return 0
     }
     const averageTime = this.getAverageTime()
-    const rme = Statistics.relativeMarginOfError(averageTime, this.getStandardDeviation(), this.getSamples())
+    const rme = Statistics.relativeMarginOfError(averageTime, this.getStandardDeviation(), this.getSampleSize())
     if (averageTime === 0) {
       this.logger.warn(
         `Benchmark "${this.name}" RME is zero. This is likely due to timer resolution limitations. Consider increasing 'timeThreshold' or 'innerIterations'.`
@@ -350,7 +350,7 @@ export class Benchmarker {
    *
    * @returns The number of samples.
    */
-  protected getSamples(): number {
+  protected getSampleSize(): number {
     return this.results.length
   }
 
@@ -381,7 +381,7 @@ export class Benchmarker {
     if (this.results.length === 0) {
       return 0
     }
-    return Statistics.marginOfError(this.getStandardDeviation(), this.getSamples())
+    return Statistics.marginOfError(this.getStandardDeviation(), this.getSampleSize())
   }
 
   /**
@@ -425,16 +425,16 @@ export class Benchmarker {
     return {
       kind: 'benchmark',
       name: this.getName(),
-      operationsPerSecond: this.getOperationsPerSecond(),
-      relativeMarginOfError: this.getRME(),
-      sampleStandardDeviation: this.getStandardDeviation(),
-      sampleArithmeticMean: this.getAverageTime() / 1000,
-      marginOfError: this.getMarginOfError(),
-      executionTimes: this.getResults(),
-      standardErrorOfTheMean: this.getStandardErrorOfTheMean(),
-      sampleVariance: this.getSampleVariance(),
-      samples: this.getSamples(),
-      sampleMedian: this.getMedian(),
+      ops: this.getOperationsPerSecond(),
+      rme: this.getRME(),
+      stddev: this.getStandardDeviation(),
+      mean: this.getAverageTime() / 1000,
+      me: this.getMarginOfError(),
+      sample: this.getResults(),
+      sem: this.getStandardErrorOfTheMean(),
+      variance: this.getSampleVariance(),
+      size: this.getSampleSize(),
+      median: this.getMedian(),
       date: new Date().toLocaleString(),
     }
   }

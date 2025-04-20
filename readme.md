@@ -28,19 +28,19 @@
 * **Suite Support:**  Organize multiple benchmarks into suites for better management and reporting. **The core library does not include any built-in reporters.**
 * **Setup function** Add a setup function to the suite to prepare the environment before running the benchmarks.
 * **Detailed Statistics:**  Reports include:
-  * `operationsPerSecond`
-  * `relativeMarginOfError` (RME)
-  * `sampleStandardDeviation`
-  * `sampleArithmeticMean`
-  * `marginOfError`
-  * `executionTimes`
-  * `standardErrorOfTheMean`
-  * `sampleVariance`
-  * `samples`
-  * `cohensD`
-  * `standardErrorOfTheDifference`
-  * `medianDifference`
-  * `medianDifferencePercent`
+  * `ops` - Operations per second.
+  * `rme` - Relative Margin of Error (RME).
+  * `me` - Margin of error.
+  * `stddev` - Sample standard deviation.
+  * `mean` - Sample arithmetic mean.
+  * `sample` - The sample of execution of times.
+  * `sem`- The standard error of the mean.
+  * `variance`- The sample variance.
+  * `size` - Sample size.
+  * `cohensd` - Cohen's d effect size.
+  * `sed` - The standard error of the difference in means.
+  * `dmedian` - The difference between the sample medians of the two benchmark runs.
+  * `pmedian` - The percentage difference between the sample medians of the two benchmark runs.
 * **Debug mode** The library provides a debug mode and detailed logs to help you understand the benchmark process.
 
 ## Quick Start
@@ -205,7 +205,7 @@ By using a statistical approach, `@pawel-up/benchmark` helps you make data-drive
 * `innerIterations?: number`
 * `maxInnerIterations?: number`
 * `timeThreshold?: number`
-* `minSamples?: number`
+* `minsize?: number`
 * `maxIterations?: number`
 * `debug?: boolean`
 * `logLevel?: number`
@@ -214,15 +214,15 @@ By using a statistical approach, `@pawel-up/benchmark` helps you make data-drive
 
 * `kind: 'benchmark'`
 * `name: string`
-* `operationsPerSecond: number`
-* `relativeMarginOfError: number`
-* `sampleStandardDeviation: number`
-* `sampleArithmeticMean: number`
-* `marginOfError: number`
-* `executionTimes: number[]`
-* `standardErrorOfTheMean: number`
-* `sampleVariance: number`
-* `samples: number`
+* `ops: number` - Operations per Second
+* `rme: number` - Relative Margin of Error (RME)
+* `stddev: number` - Sample Standard Deviation
+* `mean: number` - Sample Arithmetic Mean
+* `me: number` - Margin of error
+* `sample: number[]` - The sample of execution of times
+* `sem: number`- The standard error of the mean.
+* `variance: number` - The sample variance
+* `size: number` - Sample size
 * `date: string`
 
 ### `SuiteReport` Interface

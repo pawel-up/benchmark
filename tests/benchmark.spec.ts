@@ -17,15 +17,15 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
     assert.equal(report.name, 'Sync Benchmark')
-    assert.isAbove(report.operationsPerSecond, 0)
-    assert.isAbove(report.samples, 0)
-    assert.isDefined(report.relativeMarginOfError)
-    assert.isDefined(report.sampleStandardDeviation)
-    assert.isDefined(report.sampleArithmeticMean)
-    assert.isDefined(report.marginOfError)
-    assert.isDefined(report.executionTimes)
-    assert.isDefined(report.standardErrorOfTheMean)
-    assert.isDefined(report.sampleVariance)
+    assert.isAbove(report.ops, 0)
+    assert.isAbove(report.size, 0)
+    assert.isDefined(report.rme)
+    assert.isDefined(report.stddev)
+    assert.isDefined(report.mean)
+    assert.isDefined(report.me)
+    assert.isDefined(report.sample)
+    assert.isDefined(report.sem)
+    assert.isDefined(report.variance)
   })
 
   test('should run an asynchronous benchmark', async ({ assert }) => {
@@ -35,15 +35,15 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
     assert.equal(report.name, 'Async Benchmark')
-    assert.isAbove(report.operationsPerSecond, 0)
-    assert.isAbove(report.samples, 0)
-    assert.isDefined(report.relativeMarginOfError)
-    assert.isDefined(report.sampleStandardDeviation)
-    assert.isDefined(report.sampleArithmeticMean)
-    assert.isDefined(report.marginOfError)
-    assert.isDefined(report.executionTimes)
-    assert.isDefined(report.standardErrorOfTheMean)
-    assert.isDefined(report.sampleVariance)
+    assert.isAbove(report.ops, 0)
+    assert.isAbove(report.size, 0)
+    assert.isDefined(report.rme)
+    assert.isDefined(report.stddev)
+    assert.isDefined(report.mean)
+    assert.isDefined(report.me)
+    assert.isDefined(report.sample)
+    assert.isDefined(report.sem)
+    assert.isDefined(report.variance)
   }).timeout(20000)
 
   test('should handle errors in the benchmark function', async ({ assert }) => {
@@ -73,7 +73,7 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
     assert.equal(report.name, 'Options Benchmark')
-    assert.isAbove(report.samples, 0)
+    assert.isAbove(report.size, 0)
   })
 
   test('should handle very fast functions', async ({ assert }) => {
@@ -83,7 +83,7 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
     assert.equal(report.name, 'Very Fast Benchmark')
-    assert.isAbove(report.samples, 0)
+    assert.isAbove(report.size, 0)
   })
 
   test('should handle very slow functions', async ({ assert }) => {
@@ -97,7 +97,7 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
     assert.equal(report.name, 'Very Slow Benchmark')
-    assert.isAbove(report.samples, 0)
+    assert.isAbove(report.size, 0)
   }).timeout(2000)
 
   test('should calculate correct statistics', async ({ assert }) => {
@@ -113,12 +113,12 @@ test.group('Benchmarker', () => {
     const expectedVariance = Statistics.sampleVariance(data)
     const expectedStandardErrorOfTheMean = expectedStdDev / Math.sqrt(data.length)
 
-    assert.equal(report.sampleArithmeticMean, expectedMean / 1000)
-    assert.equal(report.sampleStandardDeviation, expectedStdDev)
-    assert.equal(report.marginOfError, expectedMarginOfError)
-    assert.equal(report.relativeMarginOfError, expectedRME)
-    assert.equal(report.sampleVariance, expectedVariance)
-    assert.equal(report.standardErrorOfTheMean, expectedStandardErrorOfTheMean)
+    assert.equal(report.mean, expectedMean / 1000)
+    assert.equal(report.stddev, expectedStdDev)
+    assert.equal(report.me, expectedMarginOfError)
+    assert.equal(report.rme, expectedRME)
+    assert.equal(report.variance, expectedVariance)
+    assert.equal(report.sem, expectedStandardErrorOfTheMean)
   })
 
   test('should handle empty results', async ({ assert }) => {
@@ -126,13 +126,13 @@ test.group('Benchmarker', () => {
     await benchmarker.run()
     const report = benchmarker.getReport()
 
-    assert.equal(report.sampleArithmeticMean, 0)
-    assert.equal(report.sampleStandardDeviation, 0)
-    assert.equal(report.marginOfError, 0)
-    assert.equal(report.relativeMarginOfError, 0)
-    assert.equal(report.sampleVariance, 0)
-    assert.equal(report.standardErrorOfTheMean, 0)
-    assert.equal(report.samples, 0)
+    assert.equal(report.mean, 0)
+    assert.equal(report.stddev, 0)
+    assert.equal(report.me, 0)
+    assert.equal(report.rme, 0)
+    assert.equal(report.variance, 0)
+    assert.equal(report.sem, 0)
+    assert.equal(report.size, 0)
   })
 
   test('should remove outliers', async ({ assert }) => {
@@ -142,7 +142,7 @@ test.group('Benchmarker', () => {
     benchmarker['removeOutliers']()
     assert.equal(benchmarker['results'].length, 5)
     assert.notInclude(benchmarker['results'], 100)
-    assert.equal(benchmarker['getSamples'](), 5)
+    assert.equal(benchmarker['getSampleSize'](), 5)
   })
 
   test('should adapt innerIterations', async ({ assert }) => {

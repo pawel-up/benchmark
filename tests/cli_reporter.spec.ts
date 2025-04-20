@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { test } from '@japa/runner'
 import { CliReporter, type CliReporterOptions, type ColorThresholds } from '../src/reporters/cli_reporter.js'
 import sinon from 'sinon'
@@ -19,17 +18,17 @@ test.group('Cli Reporter', (group) => {
   const validReport: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Benchmark',
-    operationsPerSecond: 1000,
-    samples: 100,
-    relativeMarginOfError: 0.02,
-    sampleStandardDeviation: 0.005,
-    marginOfError: 0.01,
-    sampleArithmeticMean: 0.001,
-    sampleVariance: 0.000025,
+    ops: 1000,
+    size: 100,
+    rme: 0.02,
+    stddev: 0.005,
+    me: 0.01,
+    mean: 0.001,
+    variance: 0.000025,
     date: '2023-10-27',
-    executionTimes: [1, 2, 3],
-    standardErrorOfTheMean: 0.001,
-    sampleMedian: 0.001,
+    sample: [1, 2, 3],
+    sem: 0.001,
+    median: 0.001,
   }
 
   const validSuiteReport: SuiteReport = {
@@ -99,7 +98,7 @@ test.group('Cli Reporter', (group) => {
     await reporter.run(validReport)
     assert.isTrue(consoleLogStub.called)
     assert.isTrue(consoleLogStub.calledWithMatch(/Benchmark: My Benchmark/))
-    assert.isTrue(consoleLogStub.calledWithMatch(/Samples/))
+    assert.isTrue(consoleLogStub.calledWithMatch(/Sample size/))
     assert.isTrue(consoleLogStub.calledWithMatch(/Operations per second/))
     assert.isTrue(consoleLogStub.calledWithMatch(/Relative margin of error \(RME\)/))
     assert.isTrue(consoleLogStub.calledWithMatch(/Sample standard deviation/))
@@ -173,11 +172,11 @@ test.group('Cli Reporter', (group) => {
 
   test('should validate report with negative numbers', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, operationsPerSecond: -1 }
+    const invalidReport = { ...validReport, ops: -1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"operationsPerSecond" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"ops" must be a non-negative number.')
   })
 
   test('should validate report with null', async ({ assert }) => {
@@ -190,15 +189,15 @@ test.group('Cli Reporter', (group) => {
 
   test('should validate report with multiple missing properties', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport } as { name?: string; operationsPerSecond?: number }
+    const invalidReport = { ...validReport } as { name?: string; ops?: number }
     delete invalidReport.name
-    delete invalidReport.operationsPerSecond
+    delete invalidReport.ops
     assert.isFalse(reporter.isValidReport(invalidReport as unknown as BenchmarkReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
     assert.equal(
       loggerErrorStub.args[0][1],
-      'Missing properties: name, operationsPerSecond. "name" must be a string. "operationsPerSecond" must be a non-negative number.'
+      'Missing properties: name, ops. "name" must be a string. "ops" must be a non-negative number.'
     )
   })
 })
@@ -214,17 +213,17 @@ test.group('Cli Reporter - isValidReport', (group) => {
   const validReport: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Benchmark',
-    operationsPerSecond: 1000,
-    samples: 100,
-    relativeMarginOfError: 0.02,
-    sampleStandardDeviation: 0.005,
-    marginOfError: 0.01,
-    sampleArithmeticMean: 0.001,
-    sampleVariance: 0.000025,
+    ops: 1000,
+    size: 100,
+    rme: 0.02,
+    stddev: 0.005,
+    me: 0.01,
+    mean: 0.001,
+    variance: 0.000025,
     date: '2023-10-27',
-    executionTimes: [1, 2, 3],
-    standardErrorOfTheMean: 0.001,
-    sampleMedian: 0.001,
+    sample: [1, 2, 3],
+    sem: 0.001,
+    median: 0.001,
   }
 
   group.each.setup(() => {
@@ -277,67 +276,67 @@ test.group('Cli Reporter - isValidReport', (group) => {
     assert.equal(loggerErrorStub.args[0][1], '"name" must be a string.')
   })
 
-  test('should return false for a report with negative operationsPerSecond', async ({ assert }) => {
+  test('should return false for a report with negative ops', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, operationsPerSecond: -1 }
+    const invalidReport = { ...validReport, ops: -1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"operationsPerSecond" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"ops" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative samples', async ({ assert }) => {
+  test('should return false for a report with negative size', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, samples: -1 }
+    const invalidReport = { ...validReport, size: -1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"samples" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"size" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative relativeMarginOfError', async ({ assert }) => {
+  test('should return false for a report with negative rme', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, relativeMarginOfError: -0.1 }
+    const invalidReport = { ...validReport, rme: -0.1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"relativeMarginOfError" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"rme" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative sampleStandardDeviation', async ({ assert }) => {
+  test('should return false for a report with negative stddev', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, sampleStandardDeviation: -0.1 }
+    const invalidReport = { ...validReport, stddev: -0.1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"sampleStandardDeviation" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"stddev" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative marginOfError', async ({ assert }) => {
+  test('should return false for a report with negative me', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, marginOfError: -0.1 }
+    const invalidReport = { ...validReport, me: -0.1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"marginOfError" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"me" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative sampleArithmeticMean', async ({ assert }) => {
+  test('should return false for a report with negative mean', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, sampleArithmeticMean: -0.1 }
+    const invalidReport = { ...validReport, mean: -0.1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"sampleArithmeticMean" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"mean" must be a non-negative number.')
   })
 
-  test('should return false for a report with negative sampleVariance', async ({ assert }) => {
+  test('should return false for a report with negative variance', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, sampleVariance: -0.1 }
+    const invalidReport = { ...validReport, variance: -0.1 }
     assert.isFalse(reporter.isValidReport(invalidReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
-    assert.equal(loggerErrorStub.args[0][1], '"sampleVariance" must be a non-negative number.')
+    assert.equal(loggerErrorStub.args[0][1], '"variance" must be a non-negative number.')
   })
 
   test('should return false for a report with invalid date type', async ({ assert }) => {
@@ -351,27 +350,27 @@ test.group('Cli Reporter - isValidReport', (group) => {
 
   test('should return false for a report with multiple missing properties', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport } as { name?: string; operationsPerSecond?: number }
+    const invalidReport = { ...validReport } as { name?: string; ops?: number }
     delete invalidReport.name
-    delete invalidReport.operationsPerSecond
+    delete invalidReport.ops
     assert.isFalse(reporter.isValidReport(invalidReport as unknown as BenchmarkReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
     assert.equal(
       loggerErrorStub.args[0][1],
-      'Missing properties: name, operationsPerSecond. "name" must be a string. "operationsPerSecond" must be a non-negative number.'
+      'Missing properties: name, ops. "name" must be a string. "ops" must be a non-negative number.'
     )
   })
 
   test('should return false for a report with multiple errors', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    const invalidReport = { ...validReport, name: 123, operationsPerSecond: -1, samples: -1 }
+    const invalidReport = { ...validReport, name: 123, ops: -1, size: -1 }
     assert.isFalse(reporter.isValidReport(invalidReport as unknown as BenchmarkReport))
     assert.isTrue(loggerErrorStub.calledOnce)
     assert.equal(loggerErrorStub.args[0][0], 'Invalid report:')
     assert.equal(
       loggerErrorStub.args[0][1],
-      '"name" must be a string. "operationsPerSecond" must be a non-negative number. "samples" must be a non-negative number.'
+      '"name" must be a string. "ops" must be a non-negative number. "size" must be a non-negative number.'
     )
   })
 })

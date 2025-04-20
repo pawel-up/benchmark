@@ -132,15 +132,15 @@ export class CliReporter extends Reporter {
     if (!this.isValidReport(report)) {
       throw new Error('Invalid benchmark report data.')
     }
-    const { name, operationsPerSecond, samples, relativeMarginOfError } = report
+    const { name, ops, size, rme } = report
     let str = `    ${name.padStart(25, ' ')}: `
-    str += `${this.decFormat0.format(operationsPerSecond).padStart(13, ' ')} ops/sec `
+    str += `${this.decFormat0.format(ops).padStart(13, ' ')} ops/sec `
 
     // Color-code the relative margin of error
-    const rmeStr = this.perFormat.format(relativeMarginOfError)
-    str += this.colorCode(`\xb1 ${rmeStr}`.padStart(8, ' '), relativeMarginOfError, this.rmeColorThresholds) + ' '
+    const rmeStr = this.perFormat.format(rme)
+    str += this.colorCode(`\xb1 ${rmeStr}`.padStart(8, ' '), rme, this.rmeColorThresholds) + ' '
 
-    str += `(${this.decFormat0.format(samples)} run(s) sampled)`
+    str += `(${this.decFormat0.format(size)} run(s) sampled)`
     // eslint-disable-next-line no-console
     console.log(str)
   }
@@ -156,42 +156,34 @@ export class CliReporter extends Reporter {
     const table = new Table({
       title: `Benchmark: ${report.name}`,
     })
-    table.addRow({ Measure: 'Samples', Result: `${this.decFormat0.format(report.samples)}` })
+    table.addRow({ Measure: 'Sample size', Result: `${this.decFormat0.format(report.size)}` })
     table.addRow({
       Measure: 'Operations per second',
-      Result: `${this.decFormat0.format(report.operationsPerSecond)} ops/sec`,
+      Result: `${this.decFormat0.format(report.ops)} ops/sec`,
     })
     table.addRow({
       Measure: 'Relative margin of error (RME)',
-      Result: this.colorCode(
-        this.perFormat.format(report.relativeMarginOfError),
-        report.relativeMarginOfError,
-        this.rmeColorThresholds
-      ),
+      Result: this.colorCode(this.perFormat.format(report.rme), report.rme, this.rmeColorThresholds),
     })
     table.addRow({
       Measure: 'Sample standard deviation',
       Result: this.colorCode(
-        `${this.decFormat4.format(report.sampleStandardDeviation)} ms`,
-        report.sampleStandardDeviation,
+        `${this.decFormat4.format(report.stddev)} ms`,
+        report.stddev,
         this.stdDevAndMoeColorThresholds
       ),
     })
     table.addRow({
       Measure: 'Margin of error',
-      Result: this.colorCode(
-        `${this.decFormat4.format(report.marginOfError)} ms`,
-        report.marginOfError,
-        this.stdDevAndMoeColorThresholds
-      ),
+      Result: this.colorCode(`${this.decFormat4.format(report.me)} ms`, report.me, this.stdDevAndMoeColorThresholds),
     })
     table.addRow({
       Measure: 'Sample arithmetic mean',
-      Result: `${this.decFormat4.format(report.sampleArithmeticMean * 1000)} ms`,
+      Result: `${this.decFormat4.format(report.mean * 1000)} ms`,
     })
     table.addRow({
       Measure: 'Execution Time Variance',
-      Result: `${this.decFormat4.format(report.sampleVariance)} (ms)^2`,
+      Result: `${this.decFormat4.format(report.variance)} (ms)^2`,
     })
     table.addRow({
       Measure: 'Date run',

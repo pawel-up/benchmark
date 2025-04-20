@@ -14,261 +14,257 @@ import chalk from 'chalk'
 
 test.group('compare()', () => {
   test('should return a ComparisonResult object', ({ assert }) => {
-    const reportA: BenchmarkReport = {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
-    const reportB: BenchmarkReport = {
+    const br: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 900,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.0011,
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 900,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.0011,
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(ra, br)
 
     assert.properties(result, [
-      'reportA',
-      'reportB',
-      'tStatistic',
-      'degreesOfFreedom',
-      'pValue',
-      'isSignificantlyDifferent',
-      'isReportAFaster',
-      'meanDifference',
-      'meanDifferencePercent',
-      'opsDifference',
-      'opsDifferencePercent',
-      'confidenceIntervalLower',
-      'confidenceIntervalUpper',
-      'cohensD',
-      'standardErrorOfTheDifference',
-      'medianDifference',
-      'medianDifferencePercent',
+      'a',
+      'b',
+      'ts',
+      'df',
+      'p',
+      'different',
+      'aWins',
+      'dmean',
+      'pmean',
+      'dops',
+      'pops',
+      'lci',
+      'uci',
+      'cohensd',
+      'sed',
+      'dmedian',
+      'pmedian',
     ])
   })
 
-  test('should return isSignificantlyDifferent true and isReportAFaster true when reportA is significantly faster', ({
-    assert,
-  }) => {
-    const reportA: BenchmarkReport = {
+  test('should return different true and aWins true when report a is significantly faster', ({ assert }) => {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.0005,
-      sampleArithmeticMean: 0.00007,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.0005,
+      mean: 0.00007,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
-    const reportB: BenchmarkReport = {
+    const rb: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 900,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.0011,
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 900,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.0011,
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
 
-    const result = compare(reportA, reportB)
-    assert.isTrue(result.isSignificantlyDifferent)
-    assert.isTrue(result.isReportAFaster)
-    assert.isAbove(result.meanDifference, 0)
-    assert.isAbove(result.meanDifferencePercent, 0)
-    assert.isAbove(result.medianDifference, 0)
-    assert.isAbove(result.medianDifferencePercent, 0)
-    assert.isBelow(result.pValue, 0.05)
+    const result = compare(ra, rb)
+    assert.isTrue(result.different)
+    assert.isTrue(result.aWins)
+    assert.isAbove(result.dmean, 0)
+    assert.isAbove(result.pmean, 0)
+    assert.isAbove(result.dmedian, 0)
+    assert.isAbove(result.pmedian, 0)
+    assert.isBelow(result.p, 0.05)
   })
 
-  test('should return isSignificantlyDifferent true and isReportAFaster false when reportA is significantly slower', ({
-    assert,
-  }) => {
-    const reportA: BenchmarkReport = {
+  test('should return different true and aWins false when report A is significantly slower', ({ assert }) => {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 900,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.0005,
-      sampleArithmeticMean: 0.0007,
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 900,
+      rme: 0.01,
+      stddev: 0.0005,
+      mean: 0.0007,
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
-    const reportB: BenchmarkReport = {
+    const rb: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.0001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.0001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(ra, rb)
 
-    assert.isTrue(result.isSignificantlyDifferent)
-    assert.isFalse(result.isReportAFaster)
-    assert.isBelow(result.meanDifference, 0)
-    assert.isBelow(result.meanDifferencePercent, 0)
-    assert.isBelow(result.medianDifference, 0)
-    assert.isBelow(result.medianDifferencePercent, 0)
-    assert.isBelow(result.pValue, 0.05)
+    assert.isTrue(result.different)
+    assert.isFalse(result.aWins)
+    assert.isBelow(result.dmean, 0)
+    assert.isBelow(result.pmean, 0)
+    assert.isBelow(result.dmedian, 0)
+    assert.isBelow(result.pmedian, 0)
+    assert.isBelow(result.p, 0.05)
   })
 
   test('should return isSignificantlyDifferent false when there is no statistically significant difference', ({
     assert,
   }) => {
-    const reportA: BenchmarkReport = {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
-    const reportB: BenchmarkReport = {
+    const rb: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.00101,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.00101,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(ra, rb)
 
-    assert.isFalse(result.isSignificantlyDifferent)
+    assert.isFalse(result.different)
   })
 
   test('should calculate statistical values correctly', ({ assert }) => {
-    const reportA: BenchmarkReport = {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.01,
-      sampleArithmeticMean: 0.1,
-      marginOfError: 0.0002,
-      executionTimes: [0.1, 0.11, 0.09, 0.1, 0.1],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.0001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.01,
+      mean: 0.1,
+      me: 0.0002,
+      sample: [0.1, 0.11, 0.09, 0.1, 0.1],
+      sem: 0.00005,
+      variance: 0.0001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.1,
+      median: 0.1,
     }
-    const reportB: BenchmarkReport = {
+    const rb: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.02,
-      sampleArithmeticMean: 0.12,
-      marginOfError: 0.0002,
-      executionTimes: [0.12, 0.13, 0.11, 0.12, 0.12],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.0004,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.02,
+      mean: 0.12,
+      me: 0.0002,
+      sample: [0.12, 0.13, 0.11, 0.12, 0.12],
+      sem: 0.00005,
+      variance: 0.0004,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.12,
+      median: 0.12,
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(ra, rb)
 
-    assert.approximately(result.tStatistic, -8.944271909999156, 0.000001)
-    assert.approximately(result.degreesOfFreedom, 145.58823529411762, 0.000001)
+    assert.approximately(result.ts, -8.944271909999156, 0.000001)
+    assert.approximately(result.df, 145.58823529411762, 0.000001)
   })
 
   test('should calculate statistical values correctly with p value lower than 0.05', ({ assert }) => {
-    const reportA: BenchmarkReport = {
+    const ra: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report A',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.0001, // Reduced standard deviation
-      sampleArithmeticMean: 0.001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.0001, // Reduced standard deviation
+      mean: 0.001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
-    const reportB: BenchmarkReport = {
+    const rb: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Report B',
-      operationsPerSecond: 900,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.0001, // Reduced standard deviation
-      sampleArithmeticMean: 0.0012, // Increased mean
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 900,
+      rme: 0.01,
+      stddev: 0.0001, // Reduced standard deviation
+      mean: 0.0012, // Increased mean
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
 
-    const result = compare(reportA, reportB)
+    const result = compare(ra, rb)
 
-    assert.isBelow(result.pValue, 0.05)
+    assert.isBelow(result.p, 0.05)
   })
 })
 
@@ -280,33 +276,33 @@ test.group('compareFunction', (group) => {
   const validReportA: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 1000,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.001,
-    marginOfError: 0.0002,
-    executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 1000,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.001,
+    me: 0.0002,
+    sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-27',
-    sampleMedian: 0.001,
+    median: 0.001,
   }
 
   const validReportB: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 900,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.0011,
-    marginOfError: 0.0002,
-    executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 900,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.0011,
+    me: 0.0002,
+    sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-28',
-    sampleMedian: 0.0011,
+    median: 0.0011,
   }
 
   const validSuiteReport1: SuiteReport = {
@@ -355,17 +351,17 @@ test.group('compareFunction', (group) => {
     const reportC: BenchmarkReport = {
       kind: 'benchmark',
       name: 'Another Function',
-      operationsPerSecond: 1000,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1000,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.001,
+      median: 0.001,
     }
 
     const suiteReport3: SuiteReport = {
@@ -400,15 +396,15 @@ test.group('compareFunction', (group) => {
     const invalidReport = {
       kind: 'benchmark',
       name: 'My Function',
-      operationsPerSecond: 'invalid',
-      samples: 100,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.001,
-      sampleArithmeticMean: 0.001,
-      marginOfError: 0.0002,
-      executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
+      ops: 'invalid',
+      size: 100,
+      rme: 0.01,
+      stddev: 0.001,
+      mean: 0.001,
+      me: 0.0002,
+      sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+      sem: 0.00005,
+      variance: 0.000001,
       date: '2023-10-27',
     } as unknown as BenchmarkReport
 
@@ -434,33 +430,33 @@ test.group('outputCompareFunction', (group) => {
   const validReportA: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 1000,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.001,
-    marginOfError: 0.0002,
-    executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 1000,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.001,
+    me: 0.0002,
+    sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-27',
-    sampleMedian: 0.001,
+    median: 0.001,
   }
 
   const validReportB: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 900,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.0011,
-    marginOfError: 0.0002,
-    executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 900,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.0011,
+    me: 0.0002,
+    sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-28',
-    sampleMedian: 0.0011,
+    median: 0.0011,
   }
 
   const comparisonResult = compare(validReportA, validReportB)
@@ -485,7 +481,7 @@ test.group('outputCompareFunction', (group) => {
   test('should output in json format', async ({ assert }) => {
     outputCompareFunction(comparisonResults, 'json')
     assert.isTrue(consoleInfoStub.called)
-    assert.match(consoleInfoStub.firstCall.args[0], /"reportA":/)
+    assert.match(consoleInfoStub.firstCall.args[0], /"a":/)
   })
 
   test('should output in csv format', async ({ assert }) => {
@@ -512,49 +508,49 @@ test.group('compareSuites', (group) => {
   const validReportA: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 1000,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.001,
-    marginOfError: 0.0002,
-    executionTimes: [0.001, 0.0011, 0.0009, 0.001, 0.001],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 1000,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.001,
+    me: 0.0002,
+    sample: [0.001, 0.0011, 0.0009, 0.001, 0.001],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-27',
-    sampleMedian: 0.001,
+    median: 0.001,
   }
 
   const validReportB: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Function',
-    operationsPerSecond: 900,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.0011,
-    marginOfError: 0.0002,
-    executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 900,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.0011,
+    me: 0.0002,
+    sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-28',
-    sampleMedian: 0.0011,
+    median: 0.0011,
   }
 
   const validReportC: BenchmarkReport = {
     kind: 'benchmark',
     name: 'Another Function',
-    operationsPerSecond: 500,
-    relativeMarginOfError: 0.01,
-    sampleStandardDeviation: 0.001,
-    sampleArithmeticMean: 0.002,
-    marginOfError: 0.0002,
-    executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-    standardErrorOfTheMean: 0.00005,
-    sampleVariance: 0.000001,
-    samples: 100,
+    ops: 500,
+    rme: 0.01,
+    stddev: 0.001,
+    mean: 0.002,
+    me: 0.0002,
+    sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+    sem: 0.00005,
+    variance: 0.000001,
+    size: 100,
     date: '2023-10-28',
-    sampleMedian: 0.0011,
+    median: 0.0011,
   }
 
   const validSuiteReport1: SuiteReport = {
@@ -606,17 +602,17 @@ test.group('compareSuites', (group) => {
     const reportASlower: BenchmarkReport = {
       kind: 'benchmark',
       name: 'My Function',
-      operationsPerSecond: 800,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.01,
-      sampleArithmeticMean: 0.012,
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 800,
+      rme: 0.01,
+      stddev: 0.01,
+      mean: 0.012,
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
 
     const suiteReportRegression: SuiteReport = {
@@ -635,17 +631,17 @@ test.group('compareSuites', (group) => {
     const reportAFaster: BenchmarkReport = {
       kind: 'benchmark',
       name: 'My Function',
-      operationsPerSecond: 1200,
-      relativeMarginOfError: 0.01,
-      sampleStandardDeviation: 0.0001,
-      sampleArithmeticMean: 0.00008,
-      marginOfError: 0.0002,
-      executionTimes: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
-      standardErrorOfTheMean: 0.00005,
-      sampleVariance: 0.000001,
-      samples: 100,
+      ops: 1200,
+      rme: 0.01,
+      stddev: 0.0001,
+      mean: 0.00008,
+      me: 0.0002,
+      sample: [0.0011, 0.0012, 0.001, 0.0011, 0.0011],
+      sem: 0.00005,
+      variance: 0.000001,
+      size: 100,
       date: '2023-10-27',
-      sampleMedian: 0.0011,
+      median: 0.0011,
     }
 
     const suiteReportImprovement: SuiteReport = {

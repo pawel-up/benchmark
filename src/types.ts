@@ -38,7 +38,7 @@ export interface BenchmarkReport {
    * **Higher values indicate better performance.**
    * @example 1000000 (1 million operations per second)
    */
-  operationsPerSecond: number
+  ops: number
   /**
    * The relative margin of error (RME).
    *
@@ -50,7 +50,7 @@ export interface BenchmarkReport {
    * @see {@link https://en.wikipedia.org/wiki/Relative_margin_of_error}
    * @example 0.01 (1% relative margin of error)
    */
-  relativeMarginOfError: number
+  rme: number
   /**
    * The sample standard deviation of the execution times.
    *
@@ -59,7 +59,7 @@ export interface BenchmarkReport {
    * **Lower values indicate more consistent performance.**
    * @example 0.001 (1 millisecond standard deviation)
    */
-  sampleStandardDeviation: number
+  stddev: number
   /**
    * The sample arithmetic mean of the execution times in seconds.
    *
@@ -68,7 +68,7 @@ export interface BenchmarkReport {
    * **Lower values indicate better performance.**
    * @example 0.0001 (0.1 milliseconds average execution time)
    */
-  sampleArithmeticMean: number
+  mean: number
   /**
    * The margin of error.
    *
@@ -77,7 +77,7 @@ export interface BenchmarkReport {
    * **Lower values indicate more reliable results.**
    * @example 0.0002 (0.2 milliseconds margin of error)
    */
-  marginOfError: number
+  me: number
   /**
    * An array of the individual execution times in milliseconds.
    *
@@ -88,7 +88,7 @@ export interface BenchmarkReport {
    * The first element is the fastest execution time, and the last element is the slowest.
    * @example [0.1, 0.12, 0.09, 0.11, 0.1]
    */
-  executionTimes: number[]
+  sample: number[]
   /**
    * The standard error of the mean.
    *
@@ -97,7 +97,7 @@ export interface BenchmarkReport {
    * **Lower values indicate a more precise estimate of the true mean.**
    * @example 0.00005 (0.05 milliseconds standard error of the mean)
    */
-  standardErrorOfTheMean: number
+  sem: number
   /**
    * The sample variance of the execution times.
    *
@@ -106,7 +106,7 @@ export interface BenchmarkReport {
    * **Lower values indicate more consistent performance.**
    * @example 0.000001 (0.001 milliseconds squared variance)
    */
-  sampleVariance: number
+  variance: number
   /**
    * The number of samples used in the benchmark.
    *
@@ -115,7 +115,7 @@ export interface BenchmarkReport {
    * **Higher values generally indicate more reliable results.**
    * @example 100 (100 samples)
    */
-  samples: number
+  size: number
   /**
    * The date when the benchmark was run.
    *
@@ -130,7 +130,7 @@ export interface BenchmarkReport {
    * **Lower values indicate better performance.**
    * @example 0.0001 (0.1 milliseconds median execution time)
    */
-  sampleMedian: number
+  median: number
 }
 
 /**
@@ -224,11 +224,11 @@ export interface ComparisonResult {
   /**
    * The first benchmark report being compared.
    */
-  reportA: BenchmarkReport
+  a: BenchmarkReport
   /**
    * The second benchmark report being compared.
    */
-  reportB: BenchmarkReport
+  b: BenchmarkReport
   /**
    * The t-statistic from the independent two-sample t-test (Welch's t-test).
    *
@@ -239,7 +239,7 @@ export interface ComparisonResult {
    *
    * @see {@link https://en.wikipedia.org/wiki/Student%27s_t-test}
    */
-  tStatistic: number
+  ts: number
   /**
    * The degrees of freedom for the t-test, calculated using the Welch-Satterthwaite equation.
    *
@@ -247,7 +247,7 @@ export interface ComparisonResult {
    *
    * @see {@link https://en.wikipedia.org/wiki/Welch%27s_t-test}
    */
-  degreesOfFreedom: number
+  df: number
   /**
    * The p-value from the t-test.
    *
@@ -264,71 +264,71 @@ export interface ComparisonResult {
    *
    * @see {@link https://en.wikipedia.org/wiki/P-value}
    */
-  pValue: number
+  p: number
   /**
    * Indicates whether the difference between the two benchmark runs is statistically significant.
    *
    * This is determined by comparing the p-value to a significance level (alpha), typically 0.05.
    *
-   * `true` if `pValue <= alpha`, `false` otherwise.
+   * `true` if `p <= alpha`, `false` otherwise.
    */
-  isSignificantlyDifferent: boolean
+  different: boolean
   /**
-   * Indicates whether `reportA` is faster than `reportB`.
+   * Indicates whether `a` is faster than `b`.
    *
-   * `true` if `reportA.sampleArithmeticMean < reportB.sampleArithmeticMean`, `false` otherwise.
+   * `true` if `a.mean < b.mean`, `false` otherwise.
    */
-  isReportAFaster: boolean
+  aWins: boolean
   /**
    * The difference between the sample arithmetic means of the two benchmark runs (in seconds).
    *
-   * `reportB.sampleArithmeticMean - reportA.sampleArithmeticMean`
+   * `b.mean - a.mean`
    *
-   * A positive value indicates that `reportB` is slower than `reportA`.
-   * A negative value indicates that `reportB` is faster than `reportA`.
+   * A positive value indicates that `b` is slower than `a`.
+   * A negative value indicates that `b` is faster than `a`.
    */
-  meanDifference: number
+  dmean: number
   /**
    * The percentage difference between the sample arithmetic means of the two benchmark runs.
    *
-   * `(meanDifference / reportA.sampleArithmeticMean) * 100`
+   * `(dmean / a.mean) * 100`
    *
-   * A positive value indicates that `reportB` is slower than `reportA`.
-   * A negative value indicates that `reportB` is faster than `reportA`.
+   * A positive value indicates that `b` is slower than `a`.
+   * A negative value indicates that `b` is faster than `a`.
    */
-  meanDifferencePercent: number
+  pmean: number
   /**
    * The difference between the operations per second of the two benchmark runs.
    *
-   * `reportB.operationsPerSecond - reportA.operationsPerSecond`
+   * `b.ops - a.ops`
    *
-   * A positive value indicates that `reportB` has more operations per second than `reportA`.
-   * A negative value indicates that `reportB` has fewer operations per second than `reportA`.
+   * A positive value indicates that `b` has more operations per second than `a`.
+   * A negative value indicates that `b` has fewer operations per second than `a`.
    */
-  opsDifference: number
+  dops: number
   /**
    * The percentage difference between the operations per second of the two benchmark runs.
    *
-   * `(opsDifference / reportA.operationsPerSecond) * 100`
+   * `(dops / a.ops) * 100`
    *
-   * A positive value indicates that `reportB` has more operations per second than `reportA`.
-   * A negative value indicates that `reportB` has fewer operations per second than `reportA`.
+   * A positive value indicates that `b` has more operations per second than `a`.
+   * A negative value indicates that `b` has fewer operations per second than `a`.
    */
-  opsDifferencePercent: number
+  pops: number
   /**
    * The lower bound of the 95% confidence interval for the difference in means (in seconds).
    *
-   * This value, along with `confidenceIntervalUpper`, provides a range of plausible values for
+   * This value, along with `uci`, provides a range of plausible values for
    * the true difference in means.
    */
-  confidenceIntervalLower: number
+  lci: number
   /**
    * The upper bound of the 95% confidence interval for the difference in means (in seconds).
    *
-   * This value, along with `confidenceIntervalLower`, provides a range of plausible values for
+   * This value, along with `lci`, provides a range of plausible values for
    * the true difference in means.
    */
-  confidenceIntervalUpper: number
+  uci: number
   /**
    * Cohen's d effect size.
    *
@@ -345,36 +345,36 @@ export interface ComparisonResult {
    *
    * @see {@link https://en.wikipedia.org/wiki/Effect_size#Cohen's_d}
    */
-  cohensD: number
+  cohensd: number
   /**
    * The standard error of the difference in means.
    *
    * This value represents the precision of the estimated difference in means.
    * A smaller standard error indicates a more precise estimate.
    */
-  standardErrorOfTheDifference: number
+  sed: number
   /**
    * The difference between the sample medians of the two benchmark runs (in seconds).
    *
-   * `reportB.sampleMedian - reportA.sampleMedian`
+   * `b.median - a.median`
    *
-   * A positive value indicates that `reportB` is slower than `reportA`.
-   * A negative value indicates that `reportB` is faster than `reportA`.
+   * A positive value indicates that `b` is slower than `a`.
+   * A negative value indicates that `b` is faster than `a`.
    *
    * The median is more robust to outliers than the mean.
    */
-  medianDifference: number
+  dmedian: number
   /**
    * The percentage difference between the sample medians of the two benchmark runs.
    *
-   * `(medianDifference / reportA.sampleMedian) * 100`
+   * `(dmedian / a.median) * 100`
    *
-   * A positive value indicates that `reportB` is slower than `reportA`.
-   * A negative value indicates that `reportB` is faster than `reportA`.
+   * A positive value indicates that `b` is slower than `a`.
+   * A negative value indicates that `b` is faster than `a`.
    *
    * The median is more robust to outliers than the mean.
    */
-  medianDifferencePercent: number
+  pmedian: number
 }
 
 /**

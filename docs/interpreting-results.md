@@ -12,15 +12,15 @@ Here's a breakdown of each property in the `BenchmarkReport` and how to interpre
 interface BenchmarkReport {
   kind: 'benchmark';
   name: string;
-  operationsPerSecond: number;
-  relativeMarginOfError: number;
-  sampleStandardDeviation: number;
-  sampleArithmeticMean: number;
-  marginOfError: number;
-  executionTimes: number[];
-  standardErrorOfTheMean: number;
-  sampleVariance: number;
-  samples: number;
+  ops: number;
+  rme: number;
+  stddev: number;
+  mean: number;
+  me: number;
+  sample: number[];
+  sem: number;
+  variance: number;
+  size: number;
   date: string;
 }
 ```
@@ -33,27 +33,27 @@ interface BenchmarkReport {
 - **How to use it**: This helps you identify which function the results belong to.
 - **Example**: If you benchmarked a function called `myFastFunction`, the name would be `myFastFunction`.
 
-### **operationsPerSecond**: `number`
+### **ops**: `number`
 
-- **What it is**: The number of times the benchmarked function can be executed per second.
+- **What it is**: Operations per second. The number of times the benchmarked function can be executed per second.
 - **How to use it**: This is a primary indicator of performance. Higher values are better. It tells you how many times your function can run in one second.
 - **Example**:
   - `1,000,000` ops/sec (1 million operations per second) is excellent.
   - `100` ops/sec is very slow.
-- **Guideline** If you are comparing two functions, the one with the higher `operationsPerSecond` is faster.
+- **Guideline** If you are comparing two functions, the one with the higher `ops` is faster.
 
-### **sampleArithmeticMean**: `number`
+### **mean**: `number`
 
-- **What it is**: The average execution time of the benchmarked function, measured in seconds.
+- **What it is**: Sample Arithmetic Mean. The average execution time of the benchmarked function, measured in seconds.
 - **How to use it**: This is another primary indicator of performance. Lower values are better. It tells you how long, on average, it takes for your function to run once.
 - **Example**:
   - `0.000001` seconds (1 microsecond) is extremely fast.
   - `0.1` seconds (100 milliseconds) is relatively slow.
-- **Guideline** If you are comparing two functions, the one with the lower `sampleArithmeticMean` is faster.
+- **Guideline** If you are comparing two functions, the one with the lower `mean` is faster.
 
-### **relativeMarginOfError (RME)**: `number`
+### **rme (RME)**: `number`
 
-- **What it is**: A measure of the precision of the benchmark results. It indicates how much the results might vary if you were to run the benchmark again.
+- **What it is**: Relative Margin of Error. A measure of the precision of the benchmark results. It indicates how much the results might vary if you were to run the benchmark again.
 - **How to use it**: Lower values are better. A lower RME means the results are more reliable and consistent.
 - **Guidelines**:
   - **RME <= 0.05 (5%)**: Generally considered good precision. The results are relatively reliable.
@@ -64,9 +64,9 @@ interface BenchmarkReport {
   - `0.07` (7% RME) is acceptable but could be better.
   - `0.2` (20% RME) is concerning and indicates a problem.
 
-### sampleStandardDeviation: `number`
+### stddev: `number`
 
-- **What it is**: A measure of the consistency of the execution times. It tells you how much the individual execution times varied from the average.
+- **What it is**: Sample Standard Deviation. A measure of the consistency of the execution times. It tells you how much the individual execution times varied from the average.
 - **How to use it**: Lower values are better. A lower standard deviation means the function's execution time is more consistent.
 - **Guidelines**:
   - **Standard Deviation <= 0.01 (1 millisecond)**: Very consistent.
@@ -77,9 +77,9 @@ interface BenchmarkReport {
   - `0.02` (2 milliseconds) is moderately consistent.
   - `0.1` (10 milliseconds) is inconsistent.
 
-### marginOfError: `number`
+### me: `number`
 
-- **What it is**: A measure of the uncertainty in the results. It's calculated based on the standard deviation and the number of samples.
+- **What it is**: Margin of error. A measure of the uncertainty in the results. It's calculated based on the standard deviation and the number of samples.
 - **How to use it**: Lower values are better. A lower margin of error means you can be more confident in the results.
 - **Guidelines**:
   - **Margin of Error <= 0.01 (1 millisecond)**: Very reliable.
@@ -90,38 +90,38 @@ interface BenchmarkReport {
   - `0.03` (3 milliseconds) is moderately reliable.
   - `0.1` (10 milliseconds) is less reliable.
 
-### standardErrorOfTheMean: `number`
+### sem: `number`
 
-- **What it is**: A measure of how precise the `sampleArithmeticMean` is. It estimates how much the sample mean might differ from the true mean.
+- **What it is**: The standard error of the mean. A measure of how precise the `mean` is. It estimates how much the sample mean might differ from the true mean.
 - **How to use it**: Lower values are better. A lower standard error of the mean means the sample mean is a more accurate estimate of the true mean.
 - **Example**:
   - `0.00001` is very precise.
   - `0.001` is less precise.
 
-## sampleVariance: `number`
+## variance: `number`
 
-- **What it is**: Another measure of the spread or dispersion of the execution times. It's the square of the standard deviation.
+- **What it is**: The sample variance. Another measure of the spread or dispersion of the execution times. It's the square of the standard deviation.
 - **How to use it**: Lower values are better. A lower variance means the execution times are more tightly clustered around the mean.
 - **Example**:
   - `0.0000001` is very consistent.
   - `0.001` is less consistent.
 
-### samples: `number`
+### size: `number`
 
 - **What it is**: The number of times the benchmarked function was executed during the measurement phase.
 - **How to use it**: Higher values are generally better. More samples lead to more reliable results.
 - **Guidelines**:
-  - **Samples < 10**: The results might be unreliable.
-  - **Samples >= 10**: Generally acceptable, but more is better.
-  - **Samples >= 100**: Very reliable.
+  - **Size < 10**: The results might be unreliable.
+  - **Size >= 10**: Generally acceptable, but more is better.
+  - **Size >= 100**: Very reliable.
 - **Example**:
   - `5` samples are not enough.
   - `50` samples are acceptable.
   - `500` samples are very good.
 
-### executionTimes: `number[]`
+### sample: `number[]`
 
-- **What it is**: An array of the individual execution times (in milliseconds) for each iteration of the benchmarked function.
+- **What it is**: The sample of execution of times. An array of the individual execution times (in milliseconds) for each iteration of the benchmarked function.
 - **How to use it**: This array is useful for in-depth analysis. You can:
   - Visualize the distribution of execution times (e.g., using a histogram).
   - Identify outliers.
@@ -138,8 +138,8 @@ interface BenchmarkReport {
 
 If you encounter a high Relative Margin of Error (RME), here are some steps to investigate:
 
-- **Check `sampleStandardDeviation`**: A high standard deviation indicates inconsistent execution times.
-- **Check `executionTimes`**: Look for outliers (extremely slow or fast runs).
+- **Check `stddev`**: A high standard deviation indicates inconsistent execution times.
+- **Check `sample`**: Look for outliers (extremely slow or fast runs).
 - **Increase `maxIterations`**: More samples can help reduce the impact of variability.
 - **Increase `maxExecutionTime`**: If the benchmark is stopping too early, increase this value.
 - **Isolate the Test Environment**: Close unnecessary applications and minimize background processes.
@@ -148,7 +148,7 @@ If you encounter a high Relative Margin of Error (RME), here are some steps to i
 
 ## Timer Resolution Limitations
 
-When benchmarking extremely fast functions, you might encounter a situation where the `sampleStandardDeviation`, `marginOfError`, and `sampleArithmeticMean` are all reported as zero, while the `relativeMarginOfError` (RME) is high. This is often a sign that the `performance.now()` timer is not precise enough to measure the function's execution time accurately.
+When benchmarking extremely fast functions, you might encounter a situation where the `stddev`, `me`, and `mean` are all reported as zero, while the `rme` (RME) is high. This is often a sign that the `performance.now()` timer is not precise enough to measure the function's execution time accurately.
 
 ### What Happens
 
@@ -160,10 +160,10 @@ When benchmarking extremely fast functions, you might encounter a situation wher
 
 ### How to Recognize This Issue
 
-- **Zero `sampleStandardDeviation`**: This is the most important indicator.
-- **Zero `marginOfError`**: This is another strong indicator.
-- **Zero `sampleArithmeticMean`** This is another strong indicator.
-- **High `relativeMarginOfError`**: A high RME, especially when combined with the above, is a sign of this issue.
+- **Zero `stddev`**: This is the most important indicator.
+- **Zero `me`**: This is another strong indicator.
+- **Zero `mean`** This is another strong indicator.
+- **High `rme`**: A high RME, especially when combined with the above, is a sign of this issue.
 - Warnings in the logs The logs will contain warnings about the zero values.
 
 ### How to Address It
@@ -178,11 +178,11 @@ When benchmarking extremely fast functions, you might encounter a situation wher
 
 When comparing the performance of two functions (e.g., functionA vs. functionB), focus on these metrics:
 
-- **operationsPerSecond**: The function with the higher `operationsPerSecond` is generally faster.
-- **sampleArithmeticMean**: The function with the lower `sampleArithmeticMean` is generally faster.
-- **relativeMarginOfError**: Make sure both functions have a low RME to ensure the comparison is reliable.
-- **sampleStandardDeviation** Make sure both functions have a low `sampleStandardDeviation` to ensure the comparison is reliable.
-- **marginOfError** Make sure both functions have a low `marginOfError` to ensure the comparison is reliable.
+- **ops**: The function with the higher `ops` is generally faster.
+- **mean**: The function with the lower `mean` is generally faster.
+- **rme**: Make sure both functions have a low RME to ensure the comparison is reliable.
+- **stddev** Make sure both functions have a low `stddev` to ensure the comparison is reliable.
+- **me** Make sure both functions have a low `me` to ensure the comparison is reliable.
 
 ## Conclusion
 

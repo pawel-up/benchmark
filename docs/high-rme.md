@@ -70,5 +70,5 @@ If the benchmark function performs asynchronous operations, the timing of these 
 
 ### Analyze Outliers
 
-- **Inspect `executionTimes`**: Look at the `executionTimes` array in the `BenchmarkReport` to see if there are any extreme outliers. If there are, consider whether they are legitimate or due to some external factor.
+- **Inspect `sample`**: Look at the `sample` array in the `BenchmarkReport` to see if there are any extreme outliers. If there are, consider whether they are legitimate or due to some external factor.
 - **Check the logs** Check the logs to see if there are any warnings about outliers removal.

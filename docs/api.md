@@ -251,23 +251,23 @@ Represents a benchmark report.
   - Indicates the type of the report. In this case, it will always be `'benchmark'`.
 - **`name`**: `string`
   - The name of the benchmark.
-- **`operationsPerSecond`**: `number`
+- **`ops`**: `number`
   - The number of operations per second.
-- **`relativeMarginOfError`**: `number`
+- **`rme`**: `number`
   - The relative margin of error (RME).
-- **`sampleStandardDeviation`**: `number`
+- **`stddev`**: `number`
   - The sample standard deviation of the execution times.
-- **`sampleArithmeticMean`**: `number`
+- **`mean`**: `number`
   - The sample arithmetic mean of the execution times in seconds.
-- **`marginOfError`**: `number`
+- **`me`**: `number`
   - The margin of error.
-- **`executionTimes`**: `number[]`
+- **`sample`**: `number[]`
   - An array of the individual execution times in milliseconds.
-- **`standardErrorOfTheMean`**: `number`
+- **`sem`**: `number`
   - The standard error of the mean.
-- **`sampleVariance`**: `number`
+- **`variance`**: `number`
   - The sample variance of the execution times.
-- **`samples`**: `number`
+- **`size`**: `number`
   - The number of samples used in the benchmark.
 - **`date`**: `string`
   - The date when the benchmark was run.
@@ -314,8 +314,7 @@ Defines when a reporter should be executed.
 
 ## Learn More
 
-- [Interpreting Benchmark Results](docs/interpreting-results.md)
-- [Increasing Sample Size](docs/increasing-sample-size.md)
-- [Why RME Might Be Above 5%](docs/high-rme.md)
-- [Interpreting Cohen's d](docs/cohensd.md)
-- [API Reference](docs/api.md)
+- [Interpreting Benchmark Results](interpreting-results.md)
+- [Increasing Sample Size](increasing-sample-size.md)
+- [Why RME Might Be Above 5%](high-rme.md)
+- [Interpreting Cohen's d](cohensd.md)

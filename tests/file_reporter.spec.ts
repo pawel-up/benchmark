@@ -18,16 +18,17 @@ test.group('File Reporter', (group) => {
   const validReport: BenchmarkReport = {
     kind: 'benchmark',
     name: 'My Benchmark',
-    operationsPerSecond: 1000,
-    samples: 100,
-    relativeMarginOfError: 0.02,
-    sampleStandardDeviation: 0.005,
-    marginOfError: 0.01,
-    sampleArithmeticMean: 0.001,
-    sampleVariance: 0.000025,
+    ops: 1000,
+    size: 100,
+    rme: 0.02,
+    stddev: 0.005,
+    me: 0.01,
+    mean: 0.001,
+    variance: 0.000025,
     date: '2023-10-27',
-    executionTimes: [1, 2, 3],
-    standardErrorOfTheMean: 0.001,
+    sample: [1, 2, 3],
+    sem: 0.001,
+    median: 0.001,
   }
 
   const validSuiteReport: SuiteReport = {
