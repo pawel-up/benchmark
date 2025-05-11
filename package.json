@@ -1,6 +1,6 @@
 {
   "name": "@pawel-up/benchmark",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TypeScript benchmarking library",
   "license": "MIT",
   "main": "./build/src/index.js",
