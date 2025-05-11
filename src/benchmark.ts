@@ -255,6 +255,8 @@ export class Benchmarker {
     }
   }
 
+  #mean: number | undefined
+
   /**
    * Calculates the average time per iteration.
    *
@@ -275,12 +277,17 @@ export class Benchmarker {
     if (this.results.length === 0) {
       return 0
     }
+    if (this.#mean) {
+      // We cached the mean value to avoid recalculating it multiple times
+      return this.#mean
+    }
     const averageTime = Statistics.arithmeticMean(this.results)
     if (averageTime === 0) {
       this.logger.warn(
         `Benchmark "${this.name}" average time is zero. This is likely due to timer resolution limitations. Consider increasing 'timeThreshold' or 'innerIterations'.`
       )
     }
+    this.#mean = averageTime
     return averageTime
   }
 
@@ -313,6 +320,8 @@ export class Benchmarker {
       return 0
     }
     // divide the 1000 milliseconds by the average time (in milliseconds) of each function run.
+    // The average time is calculated in milliseconds, so we need to divide 1000 by the average time
+    // to get the number of operations per second.
     return 1000 / this.getAverageTime()
   }
 
@@ -408,12 +417,17 @@ export class Benchmarker {
     return Statistics.sampleVariance(this.results)
   }
 
+  /**
+   * Gets the median of the benchmark results.
+   *
+   * @returns The median of the benchmark results.
+   */
   protected getMedian(): number {
     const sample = this.getResults()
     if (sample.length === 0) {
       return 0
     }
-    return Statistics.median(sample) / 1000
+    return Statistics.median(sample)
   }
 
   /**
@@ -428,7 +442,7 @@ export class Benchmarker {
       ops: this.getOperationsPerSecond(),
       rme: this.getRME(),
       stddev: this.getStandardDeviation(),
-      mean: this.getAverageTime() / 1000,
+      mean: this.getAverageTime(),
       me: this.getMarginOfError(),
       sample: this.getResults(),
       sem: this.getStandardErrorOfTheMean(),

@@ -16,16 +16,27 @@ export function arithmeticMean(data: number[]): number {
   return data.reduce((sum, value) => sum + value, 0) / data.length
 }
 
+/**
+ * Calculates the median of an array of numbers.
+ *
+ * @param data - The data to calculate the median for.
+ * @returns The median of the data.
+ * @throws Will throw an error if the data array is empty.
+ * @example
+ * const data = [1, 2, 3, 4, 5];
+ * const medianValue = median(data);
+ * console.log(medianValue); // Output: 3
+ */
 export function median(data: number[]): number {
   if (data.length === 0) {
     throw new Error('Data array cannot be empty.')
   }
-  const sortedData = [...data].sort((a, b) => a - b)
-  const mid = Math.floor(sortedData.length / 2)
-  if (sortedData.length % 2 === 0) {
-    return (sortedData[mid - 1] + sortedData[mid]) / 2
+  const sorted = [...data].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2
   } else {
-    return sortedData[mid]
+    return sorted[mid]
   }
 }
 
@@ -151,6 +162,18 @@ function studentsDistribution(tStat: number, df: number): number {
   return 1 - sth * continuedFraction(cth ** 2, 1, df - 3, -1)
 }
 
+/**
+ * Calculates the p-value for a given t-statistic and degrees of freedom.
+ *
+ * This function computes the two-tailed p-value for a t-test based on the
+ * provided t-statistic and degrees of freedom. It uses the Student's t-distribution
+ * to calculate the cumulative probability.
+ *
+ * @param tStat - The t-statistic (absolute value).
+ * @param df - The degrees of freedom.
+ * @returns The two-tailed p-value.
+ * @throws Will throw an error if `tStat` or `df` is not a number or if `df` is less than or equal to 0.
+ */
 export function calculatePValue(tStat: number, df: number): number {
   if (isNaN(tStat) || isNaN(df)) {
     throw new Error('t and df must be numbers.')

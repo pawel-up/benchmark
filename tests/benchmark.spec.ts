@@ -103,7 +103,7 @@ test.group('Benchmarker', () => {
   test('should calculate correct statistics', async ({ assert }) => {
     const data = [1, 2, 3, 4, 5]
     const benchmarker = new Benchmarker('Statistics Benchmark', () => {}, { maxIterations: 5 })
-    benchmarker['results'] = data // Directly set the results for testing purposes
+    benchmarker['results'] = data
     const report = benchmarker.getReport()
 
     const expectedMean = Statistics.arithmeticMean(data)
@@ -112,13 +112,19 @@ test.group('Benchmarker', () => {
     const expectedRME = Statistics.relativeMarginOfError(expectedMean, expectedStdDev, data.length)
     const expectedVariance = Statistics.sampleVariance(data)
     const expectedStandardErrorOfTheMean = expectedStdDev / Math.sqrt(data.length)
+    const expectedMedian = Statistics.median(data)
+    const expectedOperations = 1000 / expectedMean
 
-    assert.equal(report.mean, expectedMean / 1000)
-    assert.equal(report.stddev, expectedStdDev)
-    assert.equal(report.me, expectedMarginOfError)
+    assert.equal(report.ops, expectedOperations)
     assert.equal(report.rme, expectedRME)
-    assert.equal(report.variance, expectedVariance)
+    assert.equal(report.stddev, expectedStdDev)
+    assert.equal(report.mean, expectedMean)
+    assert.equal(report.me, expectedMarginOfError)
+    assert.deepEqual(report.sample, data)
     assert.equal(report.sem, expectedStandardErrorOfTheMean)
+    assert.equal(report.variance, expectedVariance)
+    assert.equal(report.size, data.length)
+    assert.equal(report.median, expectedMedian)
   })
 
   test('should handle empty results', async ({ assert }) => {
