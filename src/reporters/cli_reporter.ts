@@ -1,7 +1,7 @@
 import { Table } from 'console-table-printer'
 import chalk from 'chalk'
 import type { BenchmarkReport, SuiteReport } from '../types.js'
-import { Reporter } from './reporter.js'
+import { Reporter, ReporterInit } from './reporter.js'
 import type { Logger, ILogObj } from 'tslog'
 import { createLogger } from '../logger.js'
 import { validateBenchmarkReport } from '../validators.js'
@@ -84,6 +84,12 @@ export class CliReporter extends Reporter {
    */
   protected logger: Logger<ILogObj>
 
+  /**
+   * The padding for the name column in the output.
+   * @default 25
+   */
+  protected namePadding = 25
+
   constructor(
     protected options: CliReporterOptions = {},
     logger?: Logger<ILogObj>
@@ -93,6 +99,11 @@ export class CliReporter extends Reporter {
     this.stdDevAndMoeColorThresholds = options.stdDevAndMoeColorThresholds || { yellow: 0.01, red: 0.05 }
     this.logger = logger || createLogger({ debug: false, logLevel: 5 })
     this.logger.info(`CLI reporter created with options:`, options)
+  }
+
+  override async initialize(init: ReporterInit): Promise<void> {
+    const max = init.names.reduce((max, name) => Math.max(max, name.length), 0)
+    this.namePadding = Math.max(this.namePadding, max + 4)
   }
 
   /**
@@ -133,7 +144,7 @@ export class CliReporter extends Reporter {
       throw new Error('Invalid benchmark report data.')
     }
     const { name, ops, size, rme } = report
-    let str = `    ${name.padStart(25, ' ')}: `
+    let str = `${name.padStart(this.namePadding, ' ')}: `
     str += `${this.decFormat0.format(ops).padStart(13, ' ')} ops/sec `
 
     // Color-code the relative margin of error
