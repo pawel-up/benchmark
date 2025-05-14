@@ -1,5 +1,7 @@
 import { compareSuites } from '../compare.js'
 import type { SuiteReport } from '../types.js'
+import type { Logger, ILogObj } from 'tslog'
+import { createLogger } from '../logger.js'
 
 /**
  * Options for configuring the FileStore.
@@ -10,6 +12,10 @@ export interface FileStoreOptions {
    * @default './benchmarks/history'
    */
   basePath?: string
+  /**
+   * The logger instance to use for logging messages.
+   */
+  logger?: Logger<ILogObj>
   /**
    * The filesystem module to use for file operations.
    * This is primarily used for testing purposes. However, it can also be used to
@@ -74,12 +80,17 @@ export class FileStore<T = undefined> {
    * This property is set when the `loadLatestBenchmark()` method is called.
    */
   latest?: SuiteReport
+  /**
+   * The logger to use for logging messages.
+   */
+  logger: Logger<ILogObj>
 
   constructor(options: FileStoreOptions = {}) {
     this.options = options
     if (options.basePath) {
       this.basePath = options.basePath
     }
+    this.logger = options.logger || createLogger({ debug: false, logLevel: 5 })
   }
 
   /**
@@ -139,8 +150,7 @@ export class FileStore<T = undefined> {
       this.latest = result
       return result
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error reading benchmark file:', error)
+      this.logger.error('Error reading benchmark file:', error)
     }
   }
 
@@ -154,8 +164,7 @@ export class FileStore<T = undefined> {
    */
   compareLatest(result: SuiteReport, latest: SuiteReport | undefined = this.latest): void {
     if (!latest) {
-      // eslint-disable-next-line no-console
-      console.log('No previous benchmark found to compare with.')
+      this.logger.info('No previous benchmark found to compare with.')
       return
     }
     compareSuites(result, latest)

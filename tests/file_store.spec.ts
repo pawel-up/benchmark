@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { test } from '@japa/runner'
+import { type ILogObj, type ILogObjMeta, Logger } from 'tslog'
 import { FileStore } from '../src/store/file_store.js'
 import { SuiteReport } from '../src/types.js'
 
@@ -98,7 +99,16 @@ test.group('FileStore.loadLatestBenchmark()', () => {
         throw new Error('File read error')
       },
     }
-    const fileStore = new FileStore<'Suite1' | 'Suite2'>({ fs: mockFsWithError, path: mockPath })
+    const logger = new Logger<ILogObj>({
+      type: 'pretty',
+      hideLogPositionForProduction: true,
+      minLevel: 6,
+    })
+    const transports: ILogObjMeta[] = []
+    logger.attachTransport((logObj) => {
+      transports.push(logObj)
+    })
+    const fileStore = new FileStore<'Suite1' | 'Suite2'>({ fs: mockFsWithError, path: mockPath, logger })
     const latest = await fileStore.loadLatestBenchmark('Suite1')
     assert.strictEqual(latest, undefined)
     assert.strictEqual(fileStore.latest, undefined)
@@ -107,21 +117,25 @@ test.group('FileStore.loadLatestBenchmark()', () => {
 
 test.group('FileStore.compareLatest()', () => {
   test('handles no latest', ({ assert }) => {
-    const fileStore = new FileStore()
+    const logger = new Logger<ILogObj>({
+      type: 'pretty',
+      hideLogPositionForProduction: true,
+      minLevel: 3,
+    })
+    const transports: ILogObjMeta[] = []
+    logger.attachTransport((logObj) => {
+      transports.push(logObj)
+    })
+    const fileStore = new FileStore({ logger })
     const result: SuiteReport = {
       name: 'Current Suite',
       date: new Date().toLocaleDateString(),
       results: [],
       kind: 'suite',
     }
-    let consoleOutput = ''
-    const originalLog = console.log
-    console.log = (message: string) => {
-      consoleOutput = message
-    }
     fileStore.compareLatest(result)
-    console.log = originalLog
-    assert.strictEqual(consoleOutput, 'No previous benchmark found to compare with.')
+    assert.lengthOf(transports, 1)
+    assert.strictEqual(transports[0]['0'], 'No previous benchmark found to compare with.')
   })
 
   test('uses the passed latest report', ({ assert }) => {
