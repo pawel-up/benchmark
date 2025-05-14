@@ -102,6 +102,9 @@ export class CliReporter extends Reporter {
   }
 
   override async initialize(init: ReporterInit): Promise<void> {
+    if (!init.names || init.names.length === 0) {
+      return
+    }
     const max = init.names.reduce((max, name) => Math.max(max, name.length), 0)
     this.namePadding = Math.max(this.namePadding, max + 4)
   }
