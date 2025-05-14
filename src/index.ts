@@ -22,3 +22,4 @@ export { FileReporter, type FileReporterOptions } from './reporters/file_reporte
 export type * from './types.js'
 export { Suite } from './suite.js'
 export * from './compare.js'
+export { FileStore, type FileStoreOptions } from './store/file_store.js'
