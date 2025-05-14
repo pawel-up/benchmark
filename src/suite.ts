@@ -112,7 +112,7 @@ export class Suite extends EventTarget {
       throw new Error(`Benchmark with name "${name}" already exists.`)
     }
     this.benchmarks.push({ name, fn })
-    this.logger.trace(`Benchmark "${name}" added to suite "${this.name}"`)
+    this.logger.silly(`Benchmark "${name}" added to suite "${this.name}"`)
     return this
   }
 
@@ -124,7 +124,7 @@ export class Suite extends EventTarget {
   addReporter(reporter: Reporter, timing: ReporterExecutionTiming): this {
     this.logger.debug(`Adding reporter "${reporter.constructor.name}" to suite "${this.name}" with timing "${timing}"`)
     this.reporters.push({ reporter, timing })
-    this.logger.trace(`Reporter "${reporter.constructor.name}" added to suite "${this.name}" with timing "${timing}"`)
+    this.logger.silly(`Reporter "${reporter.constructor.name}" added to suite "${this.name}" with timing "${timing}"`)
     return this
   }
 
@@ -135,7 +135,7 @@ export class Suite extends EventTarget {
   setSetup(fn: () => unknown | Promise<unknown>): this {
     this.logger.debug(`Setting up the setup function for suite "${this.name}"`)
     this.setupFn = fn
-    this.logger.trace(`Setup the setup function set for suite "${this.name}"`)
+    this.logger.silly(`Setup the setup function set for suite "${this.name}"`)
     return this
   }
 
@@ -150,7 +150,7 @@ export class Suite extends EventTarget {
       throw new Error('Setup function not defined. Use setSetup() first.')
     }
     this.benchmarks.push({ name: setupSymbol, fn: this.setupFn })
-    this.logger.trace(`Setup function added to execution queue for suite "${this.name}"`)
+    this.logger.silly(`Setup function added to execution queue for suite "${this.name}"`)
     return this
   }
 
@@ -161,6 +161,7 @@ export class Suite extends EventTarget {
   async run(): Promise<SuiteReport> {
     this.reports = []
     this.logger.info(`Starting benchmark suite "${this.name}"`)
+    await this.initializeReporters()
     for (const benchmark of this.benchmarks) {
       if (benchmark.name === setupSymbol) {
         this.logger.debug(`Running setup function for suite "${this.name}"`)
@@ -190,6 +191,24 @@ export class Suite extends EventTarget {
     return this.getReport()
   }
 
+  private async initializeReporters(): Promise<void> {
+    this.logger.debug(`Initializing reporters for suite "${this.name}"`)
+    const names: string[] = []
+    for (const benchmark of this.benchmarks) {
+      if (benchmark.name !== setupSymbol) {
+        names.push(benchmark.name)
+      }
+    }
+    for (const { reporter } of this.reporters) {
+      if (reporter.initialize) {
+        this.logger.silly(`Initializing reporter "${reporter.constructor.name}" for suite "${this.name}"`)
+        await reporter.initialize({ names })
+        this.logger.silly(`Reporter "${reporter.constructor.name}" initialized for suite "${this.name}"`)
+      }
+    }
+    this.logger.debug(`All reporters initialized for suite "${this.name}"`)
+  }
+
   /**
    * Runs the reporters for the specified timing.
    * @param timing - The timing for which to run the reporters.
@@ -203,7 +222,7 @@ export class Suite extends EventTarget {
           `Running reporter "${reporter.constructor.name}" with timing "${timing}" for suite "${this.name}"`
         )
         await reporter.run(data)
-        this.logger.trace(`Reporter "${reporter.constructor.name}" completed for suite "${this.name}"`)
+        this.logger.silly(`Reporter "${reporter.constructor.name}" completed for suite "${this.name}"`)
       }
     }
     this.logger.debug(`All reporters with timing "${timing}" completed for suite "${this.name}"`)

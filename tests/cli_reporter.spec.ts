@@ -373,4 +373,10 @@ test.group('Cli Reporter - isValidReport', (group) => {
       '"name" must be a string. "ops" must be a non-negative number. "size" must be a non-negative number.'
     )
   })
+
+  test('should initialize name padding based on benchmark names', async ({ assert }) => {
+    const reporter = new CliReporter({}, logger)
+    await reporter.initialize({ names: ['short', 'longerName', 'veryLongBenchmarkName'] })
+    assert.equal(reporter['namePadding'], 'veryLongBenchmarkName'.length + 4)
+  })
 })
