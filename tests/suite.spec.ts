@@ -44,12 +44,15 @@ test.group('Suite', (group) => {
     assert.equal(suite['benchmarkSetup'], setupFn)
   })
 
-  test('should add the setup function to the execution queue', async ({ assert }) => {
+  test('should add the setup function to the next benchmark function', async ({ assert }) => {
     const suite = new Suite('Test Suite')
     const setupFn = () => {}
-    suite.setSetup(setupFn).setup()
+    suite
+      .setSetup(setupFn)
+      .setup()
+      .add('Benchmark', () => {})
     assert.lengthOf(suite['benchmarks'], 1)
-    assert.equal(suite['benchmarks'][0].fn, setupFn)
+    assert.equal(suite['benchmarks'][0].setup, setupFn)
   })
 
   test('should throw an error if setup is called without setSetup', async ({ assert }) => {
@@ -86,11 +89,10 @@ test.group('Suite', (group) => {
     const benchmarkFn2 = sinon.stub().returns('benchmark')
     suite.setSetup(setupFn).add('b1', benchmarkFn1).setup().add('b2', benchmarkFn2).setup()
     await suite.run()
-    assert.isTrue(setupFn.calledTwice)
+    assert.isTrue(setupFn.calledOnce)
     assert.isTrue(benchmarkFn1.called)
     assert.isTrue(benchmarkFn2.called)
     assert.isTrue(setupFn.calledBefore(benchmarkFn2))
-    assert.isTrue(setupFn.calledAfter(benchmarkFn2))
   })
 
   test('should run reporters after each benchmark', async ({ assert }) => {
@@ -185,12 +187,12 @@ test.group('Suite', (group) => {
     assert.deepEqual(report.results, [])
   })
 
-  test('should handle suite with only setup', async ({ assert }) => {
+  test('does not call the setup without a benchmark function', async ({ assert }) => {
     const suite = new Suite('Setup Only Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
     const setupFn = sinon.stub().resolves()
     suite.setSetup(setupFn).setup()
     const report = await suite.run()
-    assert.isTrue(setupFn.calledOnce)
+    assert.isFalse(setupFn.called)
     assert.equal(report.kind, 'suite')
     assert.equal(report.name, 'Setup Only Suite')
     assert.deepEqual(report.results, [])
@@ -388,12 +390,12 @@ test.group('Suite', (group) => {
       maxInnerIterations: 1,
       maxExecutionTime: 2,
     })
-    // executes first before the benchmark and group setup
-    const benchmarkSetup = sinon.stub().returns('benchmarkSetup')
-    // executes second
+    // executes first
     const groupSuiteSetup = sinon.stub().returns('groupSuite')
-    // executes third
+    // executes second
     const groupBenchmarkSetup = sinon.stub().returns('groupBenchmark')
+    // executes third
+    const benchmarkSetup = sinon.stub().returns('benchmarkSetup')
     const benchmarkFn = sinon.stub().resolves()
     suite.setGroupSuiteSetup('Group 1', groupSuiteSetup)
     suite.setGroupBenchmarkSetup('Group 1', groupBenchmarkSetup)
@@ -404,10 +406,10 @@ test.group('Suite', (group) => {
     assert.isTrue(groupBenchmarkSetup.calledOnce)
     assert.isTrue(benchmarkSetup.calledOnce)
     assert.isTrue(benchmarkFn.called)
-    assert.deepEqual(benchmarkSetup.args[0], []) // first in the queue, no value.
-    assert.equal(groupSuiteSetup.firstCall.args[0], 'benchmarkSetup') // second, with the bench return value
-    assert.equal(groupBenchmarkSetup.firstCall.args[0], 'groupSuite') // second, with the bench return value
-    assert.deepEqual(benchmarkFn.firstCall.args[0], 'groupBenchmark')
+    assert.deepEqual(benchmarkSetup.firstCall.args[0], 'groupBenchmark')
+    assert.isUndefined(groupSuiteSetup.firstCall.args[0])
+    assert.equal(groupBenchmarkSetup.firstCall.args[0], 'groupSuite')
+    assert.deepEqual(benchmarkFn.firstCall.args[0], 'benchmarkSetup')
   })
 
   test('should run benchmarks in the order they are added within a group', async ({ assert }) => {
@@ -417,5 +419,36 @@ test.group('Suite', (group) => {
     suite.group('Group 1', 'Benchmark 1', b1).group('Group 1', 'Benchmark 2', b2)
     await suite.run()
     assert.isTrue(b1.calledBefore(b2))
+  })
+
+  test('should pass group setup value to subsequent benchmark calls and benchmark setup', async ({ assert }) => {
+    const suite = new Suite('Group Setup Caching Test Suite', {
+      maxIterations: 1,
+      maxInnerIterations: 1,
+      maxExecutionTime: 2,
+    })
+    const groupSuiteSetup = sinon.stub().returns('groupSuite')
+    const benchmarkSetup1 = sinon.stub().returns('benchmarkSetup')
+    const benchmarkFn1 = sinon.stub().resolves()
+    const benchmarkFn2 = sinon.stub().resolves()
+
+    suite.setGroupSuiteSetup('Group 1', groupSuiteSetup)
+    suite.setSetup(benchmarkSetup1)
+    suite.setup().group('Group 1', 'Benchmark 1', benchmarkFn1)
+    suite.setup().group('Group 1', 'Benchmark 2', benchmarkFn2)
+
+    await suite.run()
+
+    assert.isTrue(groupSuiteSetup.calledOnce)
+    assert.isTrue(benchmarkFn1.called)
+    assert.isTrue(benchmarkFn2.called)
+    assert.isTrue(benchmarkSetup1.calledTwice)
+
+    // Check that the group setup value is passed to both benchmark functions
+    assert.deepEqual(benchmarkSetup1.firstCall.args[0], 'groupSuite')
+
+    // Check that the benchmark setup value is passed to the benchmark function
+    assert.deepEqual(benchmarkFn1.firstCall.args[0], 'benchmarkSetup')
+    assert.deepEqual(benchmarkFn2.firstCall.args[0], 'benchmarkSetup')
   })
 })

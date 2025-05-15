@@ -100,9 +100,9 @@ suite.setGroupSuiteTeardown('My Group', () => {
 
 The execution order of setup and teardown functions within a group is as follows:
 
-1. **Global Suite Setup** (if defined using `suite.setSetup()` and added to the queue using `suite.setup()`)
-2. **Group Suite Setup** (if defined using `suite.setGroupSuiteSetup()` and this is the first benchmark of the group)
-3. **Group Benchmark Setup** (if defined using `suite.setGroupBenchmarkSetup()`)
+1. **Group Suite Setup** (if defined using `suite.setGroupSuiteSetup()` and this is the first benchmark of the group)
+2. **Group Benchmark Setup** (if defined using `suite.setGroupBenchmarkSetup()`)
+3. **Global Suite Setup** (if defined using `suite.setSetup()` and added to the queue using `suite.setup()`)
 4. **Benchmark Function**
 5. **Group Benchmark Teardown** (if defined using `suite.setGroupBenchmarkTeardown()`)
 6. **Group Suite Teardown** (if defined using `suite.setGroupSuiteTeardown()` and this is the last benchmark of the group)

@@ -17,7 +17,7 @@ interface BenchmarkSuiteEntry {
    * - `benchmark`: A benchmark function that will be executed
    * - `setup`: A setup function that will be executed before the benchmark
    */
-  type: 'benchmark' | 'setup'
+  type: 'benchmark'
   /**
    * Optional group name for the benchmark.
    */
@@ -35,6 +35,10 @@ interface BenchmarkSuiteEntry {
    * When set it overrides the options set in the constructor.
    */
   options?: BenchmarkOptions
+  /**
+   * The benchmark setup function to execute before the benchmark.
+   */
+  setup?: BenchmarkFunction
 }
 
 /**
@@ -54,17 +58,16 @@ interface SuiteReporterEntry {
  * When the `run()` method is called, the following steps are executed:
  *
  * 1. The reporters are initialized.
- * 2. The benchmark setup function is executed (if any).
- *    Note, the setup function is executed as a separate function in the queue.
  * 1. The `before-run` event is dispatched.
  * 1. The group suite setup function is executed (if any, only for the first benchmark).
- * 2. The group benchmark setup function is executed (if any).
- * 4. The benchmark function is executed.
- * 5. The report is generated.
- * 6. The benchmark teardown function is executed (if any).
- * 7. The group benchmark teardown function is executed (if any).
+ * 1. The group benchmark setup function is executed (if any).
+ * 1. The benchmark's own setup function is executed (if any).
+ * 1. The benchmark function is executed.
+ * 1. The report is generated.
+ * 1. The benchmark teardown function is executed (if any).
+ * 1. The group benchmark teardown function is executed (if any).
  * 1. The group suite teardown function is executed (if any, only for the last benchmark).
- * 8. The `after-each` reporters are called.
+ * 1. The `after-each` reporters are called.
  *
  * @fires BenchmarkSuite#before-run - Dispatched before each benchmark is run.
  * @fires BenchmarkSuite#after-run - Dispatched after each benchmark has completed.
@@ -137,6 +140,18 @@ export class Suite extends EventTarget {
   >()
 
   /**
+   * It is a map of group names and their corresponding values created by the group setup function.
+   * The values are passed to the benchmark setup function as the only argument.
+   */
+  private groupGlobalSetupValues: Map<string, unknown> = new Map<string, unknown>()
+
+  /**
+   * When the `setup()` method is called, the setup function is hold in here.
+   * After the next benchmark is added, the setup function is then added as a property to the benchmark.
+   */
+  private pendingSetup?: BenchmarkFunction
+
+  /**
    * Creates a new benchmark suite.
    *
    * @param name - The name of the benchmark suite.
@@ -195,7 +210,13 @@ export class Suite extends EventTarget {
       this.logger.error(`Benchmark with name "${name}" already exists in suite "${this.name}".`)
       throw new Error(`Benchmark with name "${name}" already exists.`)
     }
-    this.benchmarks.push({ name, fn, type: 'benchmark', options })
+    const entry: BenchmarkSuiteEntry = { name, fn, type: 'benchmark', options }
+    if (this.pendingSetup) {
+      entry.setup = this.pendingSetup
+      this.pendingSetup = undefined
+      this.logger.debug(`Setup function added to benchmark "${name}" in suite "${this.name}"`)
+    }
+    this.benchmarks.push(entry)
     this.logger.silly(`Benchmark "${name}" added to suite "${this.name}"`)
     return this
   }
@@ -215,6 +236,11 @@ export class Suite extends EventTarget {
       throw new Error(`Benchmark with name "${name}" already exists in group "${groupName}".`)
     }
     const entry: BenchmarkSuiteEntry = { name, fn, group: groupName, type: 'benchmark', options }
+    if (this.pendingSetup) {
+      entry.setup = this.pendingSetup
+      this.pendingSetup = undefined
+      this.logger.debug(`Setup function added to benchmark "${name}" in suite "${this.name}"`)
+    }
     this.benchmarks.push(entry)
     const indexEntry = this.groupIndex.get(groupName) || { first: entry, last: entry }
     indexEntry.last = entry
@@ -300,14 +326,14 @@ export class Suite extends EventTarget {
    * ```
    */
   setup(fn?: BenchmarkFunction | null): this {
-    this.logger.debug(`Adding setup function to execution queue for suite "${this.name}"`)
+    this.logger.debug(`Adding setup function to the next scheduled benchmark for suite "${this.name}"`)
     const callable = fn || this.benchmarkSetup
     if (!callable) {
       this.logger.error(`Setup function not defined for suite "${this.name}". Use setSetup() first.`)
       throw new Error('Setup function not defined. Use setSetup() first.')
     }
-    this.benchmarks.push({ name: 'setup', fn: callable, type: 'setup' })
-    this.logger.silly(`Setup function added to execution queue for suite "${this.name}"`)
+    this.pendingSetup = callable
+    this.logger.silly(`Setup function added to the next scheduled benchmark for suite "${this.name}"`)
     return this
   }
   /**
@@ -401,12 +427,6 @@ export class Suite extends EventTarget {
     await this.initializeReporters()
     let passDownValue: unknown | undefined
     for (const benchmark of this.benchmarks) {
-      if (benchmark.type === 'setup') {
-        this.logger.debug(`Running setup function for suite "${this.name}"`)
-        passDownValue = await benchmark.fn()
-        this.logger.debug(`Setup function completed for suite "${this.name}"`)
-        continue
-      }
       this.dispatchEvent(new CustomEvent('before-run', { detail: { name: benchmark.name } }))
       if (benchmark.group) {
         const firstInGroup = this.groupIndex.get(benchmark.group)?.first
@@ -415,13 +435,14 @@ export class Suite extends EventTarget {
           const groupSetup = this.groupSuiteSetup.get(benchmark.group)
           if (groupSetup) {
             this.logger.debug(
-              `Running group suite setup function for group "${benchmark.group}" in suite "${this.name}" with value`,
-              passDownValue
+              `Running group suite setup function for group "${benchmark.group}" in suite "${this.name}" with value`
             )
             passDownValue = await groupSetup(passDownValue)
+            // we need to cache the value for the group
+            // because the group setup function is executed only once.
+            this.groupGlobalSetupValues.set(benchmark.group, passDownValue)
             this.logger.debug(
-              `Group suite setup function for group "${benchmark.group}" completed in suite "${this.name}" with value`,
-              passDownValue
+              `Group suite setup function for group "${benchmark.group}" completed in suite "${this.name}" with value`
             )
           }
         }
@@ -429,15 +450,20 @@ export class Suite extends EventTarget {
         const benchGroupSetup = this.groupBenchmarkSetup.get(benchmark.group)
         if (benchGroupSetup) {
           this.logger.debug(
-            `Running group benchmark function for group "${benchmark.group}" in suite "${this.name}" with value`,
-            passDownValue
+            `Running group benchmark function for group "${benchmark.group}" in suite "${this.name}" with value`
           )
-          passDownValue = await benchGroupSetup(passDownValue)
+          // we used the cached value because the group setup function is executed only once.
+          passDownValue = await benchGroupSetup(this.groupGlobalSetupValues.get(benchmark.group))
           this.logger.debug(
-            `Group benchmark function for group "${benchmark.group}" completed in suite "${this.name}" with value`,
-            passDownValue
+            `Group benchmark function for group "${benchmark.group}" completed in suite "${this.name}" with value`
           )
         }
+      }
+      // Benchmark setup function
+      if (benchmark.setup) {
+        this.logger.debug(`Running benchmark setup function for "${benchmark.name}" in suite "${this.name}"`)
+        passDownValue = await benchmark.setup(passDownValue)
+        this.logger.debug(`Benchmark setup function for "${benchmark.name}" completed in suite "${this.name}"`)
       }
       this.logger.debug(`Starting benchmark "${benchmark.name}" in suite "${this.name}"`)
       try {
@@ -498,12 +524,10 @@ export class Suite extends EventTarget {
     this.logger.debug(`Initializing reporters for suite "${this.name}"`)
     const init: ReportBenchmarkInit[] = []
     for (const benchmark of this.benchmarks) {
-      if (benchmark.type !== 'setup') {
-        init.push({
-          name: benchmark.name,
-          group: benchmark.group,
-        })
-      }
+      init.push({
+        name: benchmark.name,
+        group: benchmark.group,
+      })
     }
     for (const list of this.reporters.values()) {
       for (const { reporter } of list) {
