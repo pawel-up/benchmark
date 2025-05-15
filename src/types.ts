@@ -33,6 +33,12 @@ export interface BenchmarkReport {
    */
   name: string
   /**
+   * Optional group name for the benchmark.
+   * This can be used to categorize benchmarks into groups.
+   * It is useful for organizing benchmarks in a suite.
+   */
+  group?: string
+  /**
    * The number of operations per second.
    * This is a measure of how many times the benchmarked function can be executed per second.
    * **Higher values indicate better performance.**

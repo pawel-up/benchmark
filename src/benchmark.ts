@@ -3,6 +3,8 @@ import * as Statistics from './statistics.js'
 import type { Logger, ILogObj } from 'tslog'
 import { createLogger } from './logger.js'
 
+export type BenchmarkFunction = (arg?: unknown) => unknown | Promise<unknown>
+
 /**
  * A simple benchmarking library for JavaScript.
  *
@@ -27,7 +29,7 @@ export class Benchmarker {
    * This can be either a synchronous function (`() => void`) or an asynchronous function
    * (`() => Promise<void>`).
    */
-  protected fn: () => unknown | Promise<unknown>
+  protected fn: BenchmarkFunction
   /**
    * The maximum execution time for the benchmark in milliseconds.
    * The benchmark will stop after this time has elapsed, even if the maximum number of
@@ -134,9 +136,12 @@ export class Benchmarker {
    *    `innerIterations` times, and the average time per iteration is recorded.
    * 4. **Outlier Removal:** Removes outliers from the collected results using the IQR method.
    *
+   * @param passValue A value to be passed to the benchmark function. It is primarily used with the Suite
+   * integration, were the before/before group/before group benchmark function are called and can potentially
+   * prepare a value for the execute benchmark function.
    * @throws Will throw an error if the benchmark function throws an error during any iteration.
    */
-  async run(): Promise<void> {
+  async run(passValue?: unknown): Promise<void> {
     this.results = []
     this.logger.debug(`Starting benchmark "${this.name}"`)
     const overallStartTime = performance.now()
@@ -145,7 +150,7 @@ export class Benchmarker {
     for (let i = 0; i < this.warmupIterations; i++) {
       // To allow the JavaScript engine to optimize the code before the actual measurements begin.
       try {
-        await this.fn()
+        await this.fn(passValue)
         this.logger.trace(`Warm-up iteration ${i + 1} completed`)
       } catch (error) {
         this.logger.error(`Error during warmup iteration ${i + 1}:`, error)
@@ -162,7 +167,7 @@ export class Benchmarker {
       const startTime = performance.now()
       for (let j = 0; j < adaptiveInnerIterations; j++) {
         try {
-          await this.fn()
+          await this.fn(passValue)
         } catch (error) {
           this.logger.error(`Error during adaptive inner iteration ${j + 1}:`, error)
           throw error
@@ -186,7 +191,7 @@ export class Benchmarker {
       const startTime = performance.now()
       for (let j = 0; j < this.innerIterations; j++) {
         try {
-          await this.fn()
+          await this.fn(passValue)
         } catch (error) {
           this.logger.error(`Error during main iteration ${i + 1}, inner iteration ${j + 1}:`, error)
           throw error

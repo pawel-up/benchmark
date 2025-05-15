@@ -16,7 +16,7 @@ test.group('Suite', (group) => {
   test('should add a benchmark to the suite', async ({ assert }) => {
     const suite = new Suite('Test Suite')
     suite.add('Test Benchmark', () => {})
-    assert.equal(suite['benchmarks'].length, 1)
+    assert.lengthOf(suite['benchmarks'], 1)
     assert.equal(suite['benchmarks'][0].name, 'Test Benchmark')
   })
 
@@ -32,23 +32,23 @@ test.group('Suite', (group) => {
       async run(): Promise<void> {}
     })()
     suite.addReporter(reporter, 'after-each')
-    assert.equal(suite['reporters'].length, 1)
-    assert.equal(suite['reporters'][0].reporter, reporter)
-    assert.equal(suite['reporters'][0].timing, 'after-each')
+    assert.lengthOf(Array.from(suite['reporters'].keys()), 1)
+    const passedReporter = suite['reporters'].get('after-each')!
+    assert.equal(passedReporter[0].reporter, reporter)
   })
 
   test('should set the setup function', async ({ assert }) => {
     const suite = new Suite('Test Suite')
     const setupFn = () => {}
     suite.setSetup(setupFn)
-    assert.equal(suite['setupFn'], setupFn)
+    assert.equal(suite['benchmarkSetup'], setupFn)
   })
 
   test('should add the setup function to the execution queue', async ({ assert }) => {
     const suite = new Suite('Test Suite')
     const setupFn = () => {}
     suite.setSetup(setupFn).setup()
-    assert.equal(suite['benchmarks'].length, 1)
+    assert.lengthOf(suite['benchmarks'], 1)
     assert.equal(suite['benchmarks'][0].fn, setupFn)
   })
 
@@ -220,5 +220,202 @@ test.group('Suite', (group) => {
     suite.add('Benchmark', benchmarkFn)
     await suite.run()
     assert.isTrue(spy.called)
+  })
+
+  test('should add a benchmark to a group', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite')
+    suite.group('Group 1', 'Benchmark 1', () => {})
+    assert.lengthOf(suite['benchmarks'], 1)
+    assert.equal(suite['benchmarks'][0].name, 'Benchmark 1')
+    assert.equal(suite['benchmarks'][0].group, 'Group 1')
+  })
+
+  test('should throw an error when adding a duplicate benchmark to a group', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { logLevel: 6 })
+    suite.group('Group 1', 'Benchmark 1', () => {})
+    assert.throws(
+      () => suite.group('Group 1', 'Benchmark 1', () => {}),
+      'Benchmark with name "Benchmark 1" already exists in group "Group 1".'
+    )
+  })
+
+  test('should set group suite setup function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite')
+    const setupFn = () => {}
+    suite.setGroupSuiteSetup('Group 1', setupFn)
+    assert.equal(suite['groupSuiteSetup'].get('Group 1'), setupFn)
+  })
+
+  test('should throw an error when setting a duplicate group suite setup function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { logLevel: 6 })
+    const setupFn = () => {}
+    suite.setGroupSuiteSetup('Group 1', setupFn)
+    assert.throws(
+      () => suite.setGroupSuiteSetup('Group 1', setupFn),
+      'Group suite setup function for group "Group 1" already defined.'
+    )
+  })
+
+  test('should set group suite teardown function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite')
+    const teardownFn = () => {}
+    suite.setGroupSuiteTeardown('Group 1', teardownFn)
+    assert.equal(suite['groupSuiteTeardown'].get('Group 1'), teardownFn)
+  })
+
+  test('should throw an error when setting a duplicate group suite teardown function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { logLevel: 6 })
+    const teardownFn = () => {}
+    suite.setGroupSuiteTeardown('Group 1', teardownFn)
+    assert.throws(
+      () => suite.setGroupSuiteTeardown('Group 1', teardownFn),
+      'Group suite teardown function for group "Group 1" already defined.'
+    )
+  })
+
+  test('should set group benchmark setup function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite')
+    const setupFn = () => {}
+    suite.setGroupBenchmarkSetup('Group 1', setupFn)
+    assert.equal(suite['groupBenchmarkSetup'].get('Group 1'), setupFn)
+  })
+
+  test('should throw an error when setting a duplicate group benchmark setup function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { logLevel: 6 })
+    const setupFn = () => {}
+    suite.setGroupBenchmarkSetup('Group 1', setupFn)
+    assert.throws(
+      () => suite.setGroupBenchmarkSetup('Group 1', setupFn),
+      'Group benchmark setup function for group "Group 1" already defined.'
+    )
+  })
+
+  test('should set group benchmark teardown function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite')
+    const teardownFn = () => {}
+    suite.setGroupBenchmarkTeardown('Group 1', teardownFn)
+    assert.equal(suite['groupBenchmarkTeardown'].get('Group 1'), teardownFn)
+  })
+
+  test('should throw an error when setting a duplicate group benchmark teardown function', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { logLevel: 6 })
+    const teardownFn = () => {}
+    suite.setGroupBenchmarkTeardown('Group 1', teardownFn)
+    assert.throws(
+      () => suite.setGroupBenchmarkTeardown('Group 1', teardownFn),
+      'Group benchmark teardown function for group "Group 1" already defined.'
+    )
+  })
+
+  test('should run benchmarks in groups', async ({ assert }) => {
+    const suite = new Suite('Group Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
+    const b1 = sinon.stub().resolves()
+    const b2 = sinon.stub().resolves()
+    suite.group('Group 1', 'Benchmark 1', b1)
+    suite.group('Group 2', 'Benchmark 2', b2)
+    await suite.run()
+    assert.isTrue(b1.called)
+    assert.isTrue(b2.called)
+  })
+
+  test('should run group suite setup and teardown functions', async ({ assert }) => {
+    const suite = new Suite('Group Setup Teardown Test Suite', {
+      maxIterations: 1,
+      maxInnerIterations: 1,
+      maxExecutionTime: 2,
+    })
+    const setupFn = sinon.stub().resolves()
+    const teardownFn = sinon.stub().resolves()
+    const benchmarkFn = sinon.stub().resolves()
+    suite.setGroupSuiteSetup('Group 1', setupFn)
+    suite.setGroupSuiteTeardown('Group 1', teardownFn)
+    suite.group('Group 1', 'Benchmark 1', benchmarkFn)
+    await suite.run()
+    assert.isTrue(setupFn.calledOnce)
+    assert.isTrue(teardownFn.calledOnce)
+    assert.isTrue(benchmarkFn.called)
+    assert.isTrue(setupFn.calledBefore(benchmarkFn))
+    assert.isTrue(teardownFn.calledAfter(benchmarkFn))
+  })
+
+  test('should run group benchmark setup and teardown functions', async ({ assert }) => {
+    const suite = new Suite('Group Benchmark Setup Teardown Test Suite', {
+      maxIterations: 1,
+      maxInnerIterations: 1,
+      maxExecutionTime: 2,
+    })
+    const setupFn = sinon.stub().resolves()
+    const teardownFn = sinon.stub().resolves()
+    const benchmarkFn = sinon.stub().resolves()
+    suite.setGroupBenchmarkSetup('Group 1', setupFn)
+    suite.setGroupBenchmarkTeardown('Group 1', teardownFn)
+    suite.group('Group 1', 'Benchmark 1', benchmarkFn)
+    await suite.run()
+    assert.isTrue(setupFn.calledOnce)
+    assert.isTrue(teardownFn.calledOnce)
+    assert.isTrue(benchmarkFn.called)
+    assert.isTrue(setupFn.calledBefore(benchmarkFn))
+    assert.isTrue(teardownFn.calledAfter(benchmarkFn))
+  })
+
+  test('should run group setup/teardown and benchmark setup/teardown in correct order', async ({ assert }) => {
+    const suite = new Suite('Group Order Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
+    const groupSuiteSetup = sinon.stub().resolves()
+    const groupSuiteTeardown = sinon.stub().resolves()
+    const groupBenchmarkSetup = sinon.stub().resolves()
+    const groupBenchmarkTeardown = sinon.stub().resolves()
+    const benchmarkFn = sinon.stub().resolves()
+    suite.setGroupSuiteSetup('Group 1', groupSuiteSetup)
+    suite.setGroupSuiteTeardown('Group 1', groupSuiteTeardown)
+    suite.setGroupBenchmarkSetup('Group 1', groupBenchmarkSetup)
+    suite.setGroupBenchmarkTeardown('Group 1', groupBenchmarkTeardown)
+    suite.group('Group 1', 'Benchmark 1', benchmarkFn)
+    await suite.run()
+    assert.isTrue(groupSuiteSetup.calledOnce)
+    assert.isTrue(groupSuiteTeardown.calledOnce)
+    assert.isTrue(groupBenchmarkSetup.calledOnce)
+    assert.isTrue(groupBenchmarkTeardown.calledOnce)
+    assert.isTrue(benchmarkFn.called)
+    assert.isTrue(groupSuiteSetup.calledBefore(groupBenchmarkSetup))
+    assert.isTrue(groupBenchmarkSetup.calledBefore(benchmarkFn))
+    assert.isTrue(groupBenchmarkTeardown.calledAfter(benchmarkFn))
+    assert.isTrue(groupSuiteTeardown.calledAfter(groupBenchmarkTeardown))
+  })
+
+  test('should pass down values from setup functions', async ({ assert }) => {
+    const suite = new Suite('Pass Down Values Test Suite', {
+      maxIterations: 1,
+      maxInnerIterations: 1,
+      maxExecutionTime: 2,
+    })
+    // executes first before the benchmark and group setup
+    const benchmarkSetup = sinon.stub().returns('benchmarkSetup')
+    // executes second
+    const groupSuiteSetup = sinon.stub().returns('groupSuite')
+    // executes third
+    const groupBenchmarkSetup = sinon.stub().returns('groupBenchmark')
+    const benchmarkFn = sinon.stub().resolves()
+    suite.setGroupSuiteSetup('Group 1', groupSuiteSetup)
+    suite.setGroupBenchmarkSetup('Group 1', groupBenchmarkSetup)
+    suite.setSetup(benchmarkSetup)
+    suite.setup().group('Group 1', 'Benchmark 1', benchmarkFn)
+    await suite.run()
+    assert.isTrue(groupSuiteSetup.calledOnce)
+    assert.isTrue(groupBenchmarkSetup.calledOnce)
+    assert.isTrue(benchmarkSetup.calledOnce)
+    assert.isTrue(benchmarkFn.called)
+    assert.deepEqual(benchmarkSetup.args[0], []) // first in the queue, no value.
+    assert.equal(groupSuiteSetup.firstCall.args[0], 'benchmarkSetup') // second, with the bench return value
+    assert.equal(groupBenchmarkSetup.firstCall.args[0], 'groupSuite') // second, with the bench return value
+    assert.deepEqual(benchmarkFn.firstCall.args[0], 'groupBenchmark')
+  })
+
+  test('should run benchmarks in the order they are added within a group', async ({ assert }) => {
+    const suite = new Suite('Group Order Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
+    const b1 = sinon.stub().resolves()
+    const b2 = sinon.stub().resolves()
+    suite.group('Group 1', 'Benchmark 1', b1).group('Group 1', 'Benchmark 2', b2)
+    await suite.run()
+    assert.isTrue(b1.calledBefore(b2))
   })
 })

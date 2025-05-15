@@ -1,12 +1,24 @@
 import type { BenchmarkReport, SuiteReport } from '../types.js'
 
+export interface ReportBenchmarkInit {
+  /**
+   * The benchmark's name used to construct a suite.
+   * @example 'benchmark1'
+   */
+  name: string
+  /**
+   * Optionally, the benchmark's group name.
+   */
+  group?: string
+}
+
 export interface ReporterInit {
   /**
    * The list of benchmark names used to construct a suite.
    * This is used to identify the benchmarks that are part of the suite.
    * @example ['benchmark1', 'benchmark2']
    */
-  names: string[]
+  benchmarks: ReportBenchmarkInit[]
 }
 
 /**
