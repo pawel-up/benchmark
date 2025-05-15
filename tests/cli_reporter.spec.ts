@@ -29,6 +29,7 @@ test.group('Cli Reporter', (group) => {
     sample: [1, 2, 3],
     sem: 0.001,
     median: 0.001,
+    group: 'Test Group',
   }
 
   const validSuiteReport: SuiteReport = {
@@ -91,6 +92,7 @@ test.group('Cli Reporter', (group) => {
     assert.isTrue(consoleLogStub.calledWithMatch(/1,000 ops\/sec/))
     assert.isTrue(consoleLogStub.calledWithMatch(/2%/))
     assert.isTrue(consoleLogStub.calledWithMatch(/\(100 run\(s\) sampled\)/))
+    assert.isTrue(consoleLogStub.calledWithMatch(/My Benchmark \(Test Group\)/))
   })
 
   test('should print long report', async ({ assert }) => {
@@ -106,6 +108,7 @@ test.group('Cli Reporter', (group) => {
     assert.isTrue(consoleLogStub.calledWithMatch(/Sample arithmetic mean/))
     assert.isTrue(consoleLogStub.calledWithMatch(/Execution Time Variance/))
     assert.isTrue(consoleLogStub.calledWithMatch(/Date run/))
+    assert.isTrue(consoleLogStub.calledWithMatch(/Benchmark: My Benchmark \(Test Group\)/))
   })
 
   test('should print short report for each item in suite report', async ({ assert }) => {
@@ -376,7 +379,20 @@ test.group('Cli Reporter - isValidReport', (group) => {
 
   test('should initialize name padding based on benchmark names', async ({ assert }) => {
     const reporter = new CliReporter({}, logger)
-    await reporter.initialize({ names: ['short', 'longerName', 'veryLongBenchmarkName'] })
+    await reporter.initialize({
+      benchmarks: [{ name: 'short' }, { name: 'longerName' }, { name: 'veryLongBenchmarkName' }],
+    })
     assert.equal(reporter['namePadding'], 'veryLongBenchmarkName'.length + 4)
+  })
+
+  test('should format name with group', async ({ assert }) => {
+    const reporter = new CliReporter({}, logger)
+    const formattedName = reporter['formatName']('benchmarkName', 'groupName')
+    assert.equal(formattedName, 'benchmarkName (groupName)')
+  })
+
+  test('should format name without group', async ({ assert }) => {
+    const reporter = new CliReporter({}, logger)
+    assert.equal(reporter['formatName']('benchmarkName'), 'benchmarkName')
   })
 })

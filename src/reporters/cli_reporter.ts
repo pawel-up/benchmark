@@ -90,6 +90,11 @@ export class CliReporter extends Reporter {
    */
   protected namePadding = 25
 
+  /**
+   * A flag indicating whether the reporter has groups.
+   */
+  protected hasGroups = false
+
   constructor(
     protected options: CliReporterOptions = {},
     logger?: Logger<ILogObj>
@@ -102,11 +107,28 @@ export class CliReporter extends Reporter {
   }
 
   override async initialize(init: ReporterInit): Promise<void> {
-    if (!init.names || init.names.length === 0) {
+    if (!init.benchmarks || init.benchmarks.length === 0) {
       return
     }
-    const max = init.names.reduce((max, name) => Math.max(max, name.length), 0)
+    const max = init.benchmarks.reduce((max, item) => {
+      const displayName = this.formatName(item.name, item.group)
+      if (!this.hasGroups && item.group) {
+        this.hasGroups = true
+      }
+      return Math.max(max, displayName.length)
+    }, 0)
     this.namePadding = Math.max(this.namePadding, max + 4)
+  }
+
+  /**
+   * Creates a formatted name for the benchmark.
+   *
+   * @param name The name of the benchmark.
+   * @param group Optional group name for the benchmark.
+   * @returns The formatted name of the benchmark.
+   */
+  protected formatName(name: string, group?: string): string {
+    return group ? `${name} (${group})` : name
   }
 
   /**
@@ -146,8 +168,9 @@ export class CliReporter extends Reporter {
     if (!this.isValidReport(report)) {
       throw new Error('Invalid benchmark report data.')
     }
-    const { name, ops, size, rme } = report
-    let str = `${name.padStart(this.namePadding, ' ')}: `
+    const { name, ops, size, rme, group } = report
+    const displayName = this.formatName(name, group)
+    let str = `${displayName.padStart(this.namePadding, ' ')}: `
     str += `${this.decFormat0.format(ops).padStart(13, ' ')} ops/sec `
 
     // Color-code the relative margin of error
@@ -167,8 +190,9 @@ export class CliReporter extends Reporter {
     if (!this.isValidReport(report)) {
       throw new Error('Invalid benchmark report data.')
     }
+    const displayName = this.formatName(report.name, report.group)
     const table = new Table({
-      title: `Benchmark: ${report.name}`,
+      title: `Benchmark: ${displayName}`,
     })
     table.addRow({ Measure: 'Sample size', Result: `${this.decFormat0.format(report.size)}` })
     table.addRow({
