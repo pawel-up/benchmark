@@ -1,8 +1,8 @@
 import { Benchmarker, type BenchmarkFunction } from './benchmark.js'
 import type { ReportBenchmarkInit, Reporter } from './reporters/reporter.js'
-import type { BenchmarkOptions, BenchmarkReport, SuiteReport } from './types.js'
+import type { BenchmarkOptions, BenchmarkReport, SuiteReport, SuiteInit } from './types.js'
 import type { Logger, ILogObj } from 'tslog'
-import { SuiteConfig, type SuiteInit } from './suite_config.js'
+import { SuiteConfig } from './suite_config.js'
 
 interface BenchmarkSuiteEventMap {
   'before-run': CustomEvent<{ name: string }>
