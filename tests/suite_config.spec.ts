@@ -37,7 +37,6 @@ test.group('SuiteConfig', (group) => {
       timeThreshold: 0.5,
       minSamples: 5,
       maxIterations: 50,
-      debug: true,
       logLevel: 2,
     }
     const config = new SuiteConfig(options)
@@ -49,8 +48,7 @@ test.group('SuiteConfig', (group) => {
     assert.equal(config.timeThreshold, options.timeThreshold)
     assert.equal(config.minSamples, options.minSamples)
     assert.equal(config.maxIterations, options.maxIterations)
-    assert.equal(config.debug, options.debug)
-    assert.equal(config.logLevel, 0) // Debug mode overrides logLevel
+    assert.equal(config.logLevel, 2)
   })
 
   test('should load configuration from a JSON file', async ({ assert }) => {

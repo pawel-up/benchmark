@@ -193,6 +193,7 @@ export interface BenchmarkOptions {
    * This mode is useful for debugging and development purposes.
    * It may slow down the benchmark execution.
    * @default false
+   * @deprecated Use `logLevel` instead. This will be removed in a future version.
    */
   debug?: boolean
   /**

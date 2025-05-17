@@ -132,7 +132,10 @@ export class SuiteConfig {
    * @default 5
    */
   get logLevel(): number {
-    return this.options.debug ? 0 : this.options.logLevel || 5
+    if (typeof this.options.logLevel === 'number') {
+      return this.options.logLevel
+    }
+    return 5
   }
 
   /**
