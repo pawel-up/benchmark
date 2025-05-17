@@ -204,6 +204,38 @@ export interface BenchmarkOptions {
   logLevel?: number
 }
 
+export interface SuiteInit extends BenchmarkOptions {
+  /**
+   * The path to the configuration file.
+   * When not set, the config class scans the current directory for
+   * a file named `benchmark.config.js` or `benchmark.config.json`.
+   *
+   * This should be the path to the file, not the directory.
+   */
+  configPath?: string
+  /**
+   * The filesystem module to use for file operations.
+   * This is primarily used for testing purposes. However, it can also be used to
+   * provide a custom implementation of the filesystem module (in a browser, for example).
+   * @default 'fs/promises'
+   */
+  fs?: {
+    readdir: (path: string) => Promise<string[]>
+    readFile: (path: string, encoding: string) => Promise<string>
+    stat: (path: string) => Promise<{ isFile: () => boolean }>
+  }
+  /**
+   * The path module to use for path operations.
+   * This is primarily used for testing purposes. However, it can also be used to
+   * provide a custom implementation of the path module (in a browser, for example).
+   * @default 'path'
+   */
+  path?: {
+    join: (...paths: string[]) => string
+    dirname: (path: string) => string
+  }
+}
+
 export interface FieldValidationMessage {
   /**
    * The field that did not pass validation.

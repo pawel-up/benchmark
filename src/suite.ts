@@ -2,7 +2,7 @@ import { Benchmarker, type BenchmarkFunction } from './benchmark.js'
 import type { ReportBenchmarkInit, Reporter } from './reporters/reporter.js'
 import type { BenchmarkOptions, BenchmarkReport, SuiteReport } from './types.js'
 import type { Logger, ILogObj } from 'tslog'
-import { createLogger } from './logger.js'
+import { SuiteConfig, type SuiteInit } from './suite_config.js'
 
 interface BenchmarkSuiteEventMap {
   'before-run': CustomEvent<{ name: string }>
@@ -79,7 +79,7 @@ export class Suite extends EventTarget {
    */
   private benchmarks: BenchmarkSuiteEntry[] = []
   private reports: BenchmarkReport[] = []
-  private options: BenchmarkOptions
+  private options: SuiteConfig
   /**
    * Registered reporters for the suite.
    */
@@ -162,7 +162,7 @@ export class Suite extends EventTarget {
    * const suite = new Suite('My Suite', { maxExecutionTime: 5000 });
    * ```
    */
-  constructor(name: string, options?: BenchmarkOptions)
+  constructor(name: string, options?: SuiteInit | SuiteConfig)
 
   /**
    * Creates a new benchmark suite.
@@ -174,7 +174,7 @@ export class Suite extends EventTarget {
    * const suite = new Suite({ maxExecutionTime: 5000 });
    * ```
    */
-  constructor(options?: BenchmarkOptions)
+  constructor(options?: SuiteInit | SuiteConfig)
 
   /**
    * Creates a new benchmark suite.
@@ -182,18 +182,42 @@ export class Suite extends EventTarget {
    * @param nameOrOptions - The name of the benchmark suite or options for the benchmark suite.
    * @param options - Options for the benchmark suite.
    */
-  constructor(nameOrOptions?: BenchmarkOptions | string, options?: BenchmarkOptions) {
+  constructor(nameOrOptions?: SuiteInit | SuiteConfig | string, options?: SuiteInit | SuiteConfig) {
     super()
     if (typeof nameOrOptions === 'string') {
       this.name = nameOrOptions
-      this.options = options || {}
+      this.options = new SuiteConfig(options || {})
     } else {
       this.name = 'Benchmark Suite'
-      this.options = nameOrOptions || {}
+      this.options = new SuiteConfig(nameOrOptions || {})
     }
     this.debug = this.options.debug || false
-    this.logger = createLogger(this.options)
+    this.logger = this.options.logger
     this.logger.info(`Benchmarker "${this.name}" created with options:`, this.options)
+  }
+
+  #loaded = false
+
+  /**
+   * Initializes the configuration of the suite.
+   * This step is optional and called automatically when the suite is run.
+   * However, if not called, the debug mode will not be enabled until the suite is run.
+   *
+   * @example
+   * ```typescript
+   * const suite = new Suite('My Suite', { maxExecutionTime: 5000 });
+   * await suite.load();
+   * ```
+   * @returns A promise that resolves when the configuration is loaded.
+   */
+  async load(): Promise<void> {
+    if (this.#loaded) {
+      this.logger.debug(`Configuration for suite "${this.name}" already loaded`)
+      return
+    }
+    this.#loaded = true
+    this.logger.debug(`Loading configuration for suite "${this.name}"`)
+    await this.options.load()
   }
 
   /**
@@ -424,6 +448,7 @@ export class Suite extends EventTarget {
   async run(): Promise<SuiteReport> {
     this.reports = []
     this.logger.info(`Starting benchmark suite "${this.name}"`)
+    await this.load()
     await this.initializeReporters()
     let passDownValue: unknown | undefined
     for (const benchmark of this.benchmarks) {

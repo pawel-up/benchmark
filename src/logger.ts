@@ -4,7 +4,7 @@ import type { BenchmarkOptions } from './types.js'
 export function createLogger(opts: BenchmarkOptions): Logger<ILogObj> {
   const { debug = false, logLevel } = opts
   let level: number
-  if (typeof logLevel === 'number') {
+  if (debug && typeof logLevel === 'number') {
     level = logLevel
   } else {
     level = debug ? 0 : 5

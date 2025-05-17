@@ -201,14 +201,14 @@ test.group('Suite', (group) => {
   test('should create suite with options', async ({ assert }) => {
     const options = { maxExecutionTime: 5000, debug: true, logLevel: 5 }
     const suite = new Suite('Test Suite', options)
-    assert.equal(suite['options'], options)
+    assert.equal(suite['options'].maxExecutionTime, options.maxExecutionTime)
     assert.equal(suite['debug'], true)
   })
 
   test('should create suite with only options', async ({ assert }) => {
     const options = { maxExecutionTime: 5000, debug: true, logLevel: 5 }
     const suite = new Suite(options)
-    assert.equal(suite['options'], options)
+    assert.equal(suite['options'].maxExecutionTime, options.maxExecutionTime)
     assert.equal(suite['debug'], true)
     assert.equal(suite['name'], 'Benchmark Suite')
   })
