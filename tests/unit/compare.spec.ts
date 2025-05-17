@@ -7,7 +7,7 @@ import {
   OutputFormat,
   SuiteReport,
   type BenchmarkReport,
-} from '../src/index.js'
+} from '../../src/index.js'
 import { Logger, type ILogObj } from 'tslog'
 import sinon from 'sinon'
 import chalk from 'chalk'

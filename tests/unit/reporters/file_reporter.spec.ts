@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
-import { FileReporter, FileReporterOptions } from '../src/reporters/file_reporter.js'
+import { FileReporter, FileReporterOptions } from '../../../src/reporters/file_reporter.js'
 import sinon from 'sinon'
-import { BenchmarkReport, SuiteReport } from '../src/types.js'
+import { BenchmarkReport, SuiteReport } from '../../../src/types.js'
 
 test.group('File Reporter', (group) => {
   let writeFileStub: sinon.SinonStub

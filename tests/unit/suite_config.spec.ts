@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 import { test } from '@japa/runner'
-import { SuiteConfig } from '../src/suite_config.js'
+import { SuiteConfig } from '../../src/suite_config.js'
 import { Logger, type ILogObj } from 'tslog'
 import sinon from 'sinon'
 import nodePath from 'node:path'

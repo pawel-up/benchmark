@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
-import { Suite } from '../src/suite.js'
-import { Reporter } from '../src/reporters/reporter.js'
+import { Suite } from '../../src/suite.js'
+import { Reporter } from '../../src/reporters/reporter.js'
 import sinon from 'sinon'
 import { Logger, type ILogObj } from 'tslog'
 

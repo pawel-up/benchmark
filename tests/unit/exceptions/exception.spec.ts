@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import { Exception } from '../src/exceptions/exception.js'
+import { Exception } from '../../../src/exceptions/exception.js'
 
 test.group('Exception', () => {
   test('should create an exception with default values', ({ assert }) => {

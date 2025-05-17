@@ -1,5 +1,5 @@
 import { test } from '@japa/runner'
-import * as Statistics from '../src/statistics.js'
+import * as Statistics from '../../src/statistics.js'
 
 test.group('Statistics', () => {
   test('should calculate the arithmetic mean', ({ assert }) => {
