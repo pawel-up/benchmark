@@ -175,13 +175,46 @@ export class SuiteConfig {
    * ```
    */
   canReadFile(): boolean {
-    if (typeof process !== 'undefined' && !!process.versions && !!process.versions.node) {
+    if (
+      this.initOptions.useSyntheticNodeModules !== true &&
+      typeof process !== 'undefined' &&
+      !!process.versions &&
+      !!process.versions.node
+    ) {
       return true
+    }
+    if (this.initOptions.useSyntheticNodeModules) {
+      this.validateSyntheticNodeModules()
     }
     if (this.initOptions.fs && this.initOptions.path) {
       return true
     }
     return false
+  }
+
+  /**
+   * Validates the structure of the `path` and `fs` init options.
+   */
+  protected validateSyntheticNodeModules(): void {
+    const { fs, path } = this.initOptions
+    if (!fs) {
+      throw new Error(`The "fs" synthetic module must be defined on the init options`)
+    }
+    if (!path) {
+      throw new Error(`The "path" synthetic module must be defined on the init options`)
+    }
+    if (typeof fs.readFile !== 'function') {
+      throw new Error(`The "fs.readFile" function must be defined on the init options`)
+    }
+    if (typeof fs.stat !== 'function') {
+      throw new Error(`The "fs.stat" function must be defined on the init options`)
+    }
+    if (typeof path.dirname !== 'function') {
+      throw new Error(`The "path.dirname" function must be defined on the init options`)
+    }
+    if (typeof path.join !== 'function') {
+      throw new Error(`The "path.join" function must be defined on the init options`)
+    }
   }
 
   /**
@@ -227,7 +260,7 @@ export class SuiteConfig {
    */
   protected postConfigLoad(): void {
     let level: number
-    if (this.options.debug && typeof this.options.logLevel === 'number') {
+    if (typeof this.options.logLevel === 'number') {
       level = this.options.logLevel
     } else {
       level = this.options.debug ? 0 : 5

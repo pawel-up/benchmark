@@ -60,7 +60,6 @@ test.group('SuiteConfig', (group) => {
         }
         return Promise.reject(new Error('File not found'))
       },
-      readdir: sinon.stub().resolves(['benchmark.config.json']),
     }
     const path = {
       join: nodePath.join,
@@ -81,7 +80,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub(),
       stat: sinon.stub().resolves({ isFile: () => true }),
-      readdir: sinon.stub().resolves(['benchmark.config.js']),
     }
     const path = {
       join: sinon.stub().returns('/path/to/benchmark.config.js'),
@@ -97,7 +95,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub(),
       stat: sinon.stub().rejects(new Error('File not found')),
-      readdir: sinon.stub().resolves([]),
     }
     const path = {
       join: sinon.stub().returns('/path/to/benchmark.config.json'),
@@ -118,7 +115,6 @@ test.group('SuiteConfig', (group) => {
         }
         return Promise.reject(new Error('File not found'))
       },
-      readdir: sinon.stub().resolves(['benchmark.config.json']),
     }
     const path = {
       join: nodePath.join,
@@ -141,7 +137,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub().rejects(new Error('Failed to read file')),
       stat: sinon.stub().resolves({ isFile: () => true }),
-      readdir: sinon.stub().resolves(['benchmark.config.json']),
     }
     const path = {
       join: sinon.stub().returns('/path/to/benchmark.config.json'),
@@ -163,7 +158,6 @@ test.group('SuiteConfig', (group) => {
         .rejects(new Error('File not found'))
         .onSecondCall()
         .resolves({ isFile: () => true }),
-      readdir: sinon.stub().resolves(['benchmark.config.json']),
     }
     const path = {
       join: sinon
@@ -189,7 +183,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub(),
       stat: sinon.stub().rejects(new Error('File not found')),
-      readdir: sinon.stub().resolves([]),
     }
     const path = {
       join: sinon.stub().returns('/benchmark.config.json'),
@@ -207,7 +200,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub().resolves(JSON.stringify({ maxExecutionTime: 2000 })),
       stat: sinon.stub().resolves({ isFile: () => true }),
-      readdir: sinon.stub().resolves(['benchmark.config.json']),
     }
     const path = {
       join: sinon.stub().returns('/custom/path/config.json'),
@@ -227,7 +219,6 @@ test.group('SuiteConfig', (group) => {
     const fs = {
       readFile: sinon.stub(),
       stat: sinon.stub().resolves({ isFile: () => true }),
-      readdir: sinon.stub().resolves(['benchmark.config.js']),
     }
     const path = {
       join: sinon.stub().returns('/custom/path/config.js'),
@@ -251,5 +242,188 @@ test.group('SuiteConfig', (group) => {
     const config2 = new SuiteConfig({ debug: false })
     await config2.load()
     assert.equal(config2.logger.settings.minLevel, 5)
+  })
+
+  test('Accepts an instance of the SuiteConfig and makes a reference', ({ assert }) => {
+    const c1 = new SuiteConfig({ maxExecutionTime: 10 })
+    const c2 = new SuiteConfig(c1)
+    assert.equal(c2.maxExecutionTime, 10)
+    c1['options'].maxExecutionTime = 20
+    assert.equal(c2.maxExecutionTime, 20)
+  })
+})
+
+test.group('SuiteConfig.canReadFile()', () => {
+  test('returns true for node environment', ({ assert }) => {
+    const c1 = new SuiteConfig()
+    // we are in the NodeJS environment right now.
+    assert.isTrue(c1.canReadFile())
+  })
+
+  test('returns true when polyfills are provided', ({ assert }) => {
+    const fs = {
+      readFile: sinon.stub(),
+      stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const path = {
+      join: sinon.stub().returns('/custom/path/config.js'),
+      dirname: sinon.stub().returns('/custom/path'),
+    }
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, fs, path })
+    assert.isTrue(c1.canReadFile())
+  })
+})
+
+test.group('SuiteConfig.validateSyntheticNodeModules()', () => {
+  test('throws when fs module is not defined', ({ assert }) => {
+    const path = {
+      join: sinon.stub().returns('/custom/path/config.js'),
+      dirname: sinon.stub().returns('/custom/path'),
+    }
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, path })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "fs" synthetic module must be defined on the init options'
+    )
+  })
+
+  test('throws when path module is not defined', ({ assert }) => {
+    const fs = {
+      readFile: sinon.stub(),
+      stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, fs })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "path" synthetic module must be defined on the init options'
+    )
+  })
+
+  test('throws when fs.readFile module is not defined', ({ assert }) => {
+    const fs = {
+      // readFile: sinon.stub(),
+      stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const path = {
+      join: sinon.stub().returns('/custom/path/config.js'),
+      dirname: sinon.stub().returns('/custom/path'),
+    }
+    // @ts-expect-error Testing missing properties
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, path, fs })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "fs.readFile" function must be defined on the init options'
+    )
+  })
+
+  test('throws when fs.stat module is not defined', ({ assert }) => {
+    const fs = {
+      readFile: sinon.stub(),
+      // stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const path = {
+      join: sinon.stub().returns('/custom/path/config.js'),
+      dirname: sinon.stub().returns('/custom/path'),
+    }
+    // @ts-expect-error Testing missing properties
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, path, fs })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "fs.stat" function must be defined on the init options'
+    )
+  })
+
+  test('throws when path.join module is not defined', ({ assert }) => {
+    const fs = {
+      readFile: sinon.stub(),
+      stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const path = {
+      // join: sinon.stub().returns('/custom/path/config.js'),
+      dirname: sinon.stub().returns('/custom/path'),
+    }
+    // @ts-expect-error Testing missing properties
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, path, fs })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "path.join" function must be defined on the init options'
+    )
+  })
+
+  test('throws when path.dirname module is not defined', ({ assert }) => {
+    const fs = {
+      readFile: sinon.stub(),
+      stat: sinon.stub().resolves({ isFile: () => true }),
+    }
+    const path = {
+      join: sinon.stub().returns('/custom/path/config.js'),
+      // dirname: sinon.stub().returns('/custom/path'),
+    }
+    // @ts-expect-error Testing missing properties
+    const c1 = new SuiteConfig({ useSyntheticNodeModules: true, path, fs })
+    assert.throws(
+      () => c1['validateSyntheticNodeModules'](),
+      'The "path.dirname" function must be defined on the init options'
+    )
+  })
+})
+
+test.group('SuiteConfig.postConfigLoad()', () => {
+  test('sets deprecated debug option and no logLevel', ({ assert }) => {
+    const c1 = new SuiteConfig({ debug: true })
+    c1['postConfigLoad']()
+    assert.equal(c1.logger.settings.minLevel, 0)
+  })
+
+  test('sets log level when no related config', ({ assert }) => {
+    const c1 = new SuiteConfig()
+    c1['postConfigLoad']()
+    assert.equal(c1.logger.settings.minLevel, 5)
+  })
+
+  test('sets the passed log level', ({ assert }) => {
+    const c1 = new SuiteConfig({ logLevel: 3 })
+    c1['postConfigLoad']()
+    assert.equal(c1.logger.settings.minLevel, 3)
+  })
+
+  test('the set log level take precedence', ({ assert }) => {
+    const c1 = new SuiteConfig({ logLevel: 3, debug: true })
+    c1['postConfigLoad']()
+    assert.equal(c1.logger.settings.minLevel, 3)
+  })
+})
+
+test.group('SuiteConfig.loadFromFile()', () => {
+  test('loads an esm file', async ({ assert }) => {
+    const c1 = new SuiteConfig()
+    const result = await c1['loadFromFile']({
+      type: 'esm',
+      pattern: 'benchmark.config.js',
+      path: '../tests/fixtures/benchmark.config.js',
+    })
+    assert.deepEqual(result, { innerIterations: 123 })
+  })
+
+  test('loads a json file', async ({ assert }) => {
+    const c1 = new SuiteConfig()
+    const result = await c1['loadFromFile']({
+      type: 'json',
+      pattern: 'benchmark.config.json',
+      path: './tests/fixtures/benchmark.config.json',
+    })
+    assert.deepEqual(result, { innerIterations: 123 })
+  })
+
+  test('throws when unsupported import format', async ({ assert }) => {
+    const c1 = new SuiteConfig()
+    assert.rejects(async () => {
+      await c1['loadFromFile']({
+        // @ts-expect-error Testing invalid options
+        type: 'other',
+        pattern: 'benchmark.config.json',
+        path: './tests/fixtures/benchmark.config.json',
+      })
+    })
   })
 })

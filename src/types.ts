@@ -221,7 +221,6 @@ export interface SuiteInit extends BenchmarkOptions {
    * @default 'fs/promises'
    */
   fs?: {
-    readdir: (path: string) => Promise<string[]>
     readFile: (path: string, encoding: string) => Promise<string>
     stat: (path: string) => Promise<{ isFile: () => boolean }>
   }
@@ -235,6 +234,13 @@ export interface SuiteInit extends BenchmarkOptions {
     join: (...paths: string[]) => string
     dirname: (path: string) => string
   }
+  /**
+   * Forces the config class to use the `fs` and `path` modules passed as options
+   * instead of the native modules.
+   * Note, this will perform validation of these properties and the config class
+   * will raise an error when `fs` and `path` are not set.
+   */
+  useSyntheticNodeModules?: boolean
 }
 
 export interface FieldValidationMessage {
