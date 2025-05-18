@@ -1,9 +1,9 @@
 import { test } from '@japa/runner'
 import { Logger, type ILogObj } from 'tslog'
 import sinon from 'sinon'
-import { Benchmarker } from '../src/benchmark.js'
-import type { BenchmarkOptions } from '../src/types.js'
-import * as Statistics from '../src/statistics.js'
+import { Benchmarker } from '../../src/benchmark.js'
+import type { BenchmarkOptions } from '../../src/types.js'
+import * as Statistics from '../../src/statistics.js'
 
 test.group('Benchmarker', () => {
   test('should run a synchronous benchmark', async ({ assert }) => {
@@ -66,7 +66,6 @@ test.group('Benchmarker', () => {
       maxInnerIterations: 50,
       timeThreshold: 0.5,
       minSamples: 5,
-      debug: true,
       logLevel: 5,
     }
     const benchmarker = new Benchmarker('Options Benchmark', () => {}, options)

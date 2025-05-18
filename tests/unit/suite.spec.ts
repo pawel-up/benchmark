@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
-import { Suite } from '../src/suite.js'
-import { Reporter } from '../src/reporters/reporter.js'
+import { Suite } from '../../src/suite.js'
+import { Reporter } from '../../src/reporters/reporter.js'
 import sinon from 'sinon'
 import { Logger, type ILogObj } from 'tslog'
 
@@ -35,6 +35,18 @@ test.group('Suite', (group) => {
     assert.lengthOf(Array.from(suite['reporters'].keys()), 1)
     const passedReporter = suite['reporters'].get('after-each')!
     assert.equal(passedReporter[0].reporter, reporter)
+  })
+
+  test('throws when invalid reporter timing', async ({ assert }) => {
+    const suite = new Suite('Test Suite')
+    const reporter = new (class TestReporter extends Reporter {
+      async run(): Promise<void> {}
+    })()
+    assert.throws(
+      // @ts-expect-error Testing invalid timing
+      () => suite.addReporter(reporter, 'invalid-timing'),
+      `Invalid timing "invalid-timing" for reporter "${reporter.constructor.name}".`
+    )
   })
 
   test('should set the setup function', async ({ assert }) => {
@@ -119,6 +131,19 @@ test.group('Suite', (group) => {
     assert.isTrue(reporter.run.calledOnce)
   })
 
+  test('initializes reporters when the initialize function is defined', async ({ assert }) => {
+    const suite = new Suite('Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
+    const reporter = new (class TestReporter extends Reporter {
+      run = sinon.stub().resolves()
+      override initialize = sinon.stub().resolves()
+    })()
+    const benchmarkFn = sinon.stub().resolves()
+    suite.addReporter(reporter, 'after-all')
+    suite.add('Benchmark', benchmarkFn)
+    await suite.run()
+    assert.isTrue(reporter.initialize.calledOnce)
+  })
+
   test('should dispatch before-run and after-run events', async ({ assert }) => {
     const suite = new Suite('Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
     const beforeRunListener = sinon.stub()
@@ -201,14 +226,14 @@ test.group('Suite', (group) => {
   test('should create suite with options', async ({ assert }) => {
     const options = { maxExecutionTime: 5000, debug: true, logLevel: 5 }
     const suite = new Suite('Test Suite', options)
-    assert.equal(suite['options'], options)
+    assert.equal(suite['options'].maxExecutionTime, options.maxExecutionTime)
     assert.equal(suite['debug'], true)
   })
 
   test('should create suite with only options', async ({ assert }) => {
     const options = { maxExecutionTime: 5000, debug: true, logLevel: 5 }
     const suite = new Suite(options)
-    assert.equal(suite['options'], options)
+    assert.equal(suite['options'].maxExecutionTime, options.maxExecutionTime)
     assert.equal(suite['debug'], true)
     assert.equal(suite['name'], 'Benchmark Suite')
   })
@@ -450,5 +475,22 @@ test.group('Suite', (group) => {
     // Check that the benchmark setup value is passed to the benchmark function
     assert.deepEqual(benchmarkFn1.firstCall.args[0], 'benchmarkSetup')
     assert.deepEqual(benchmarkFn2.firstCall.args[0], 'benchmarkSetup')
+  })
+
+  test('loads the configuration', async ({ assert }) => {
+    const suite = new Suite()
+    const spy = sinon.spy(suite['options'], 'load')
+    await suite.load()
+    assert.isTrue(spy.calledOnce)
+    assert.isTrue(suite['configLoaded'])
+  })
+
+  test('loads the configuration only once', async ({ assert }) => {
+    const suite = new Suite()
+    const spy = sinon.spy(suite['options'], 'load')
+    await suite.load()
+    await suite.load()
+    assert.isTrue(spy.calledOnce)
+    assert.isTrue(suite['configLoaded'])
   })
 })

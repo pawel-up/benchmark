@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import { test } from '@japa/runner'
 import { type ILogObj, type ILogObjMeta, Logger } from 'tslog'
-import { FileStore } from '../src/store/file_store.js'
-import { SuiteReport } from '../src/types.js'
+import { FileStore } from '../../../src/store/file_store.js'
+import { SuiteReport } from '../../../src/types.js'
 
 const mockFs = {
   mkdir: async () => {},

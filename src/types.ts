@@ -193,6 +193,7 @@ export interface BenchmarkOptions {
    * This mode is useful for debugging and development purposes.
    * It may slow down the benchmark execution.
    * @default false
+   * @deprecated Use `logLevel` instead. This will be removed in a future version.
    */
   debug?: boolean
   /**
@@ -202,6 +203,44 @@ export interface BenchmarkOptions {
    * @default 5
    */
   logLevel?: number
+}
+
+export interface SuiteInit extends BenchmarkOptions {
+  /**
+   * The path to the configuration file.
+   * When not set, the config class scans the current directory for
+   * a file named `benchmark.config.js` or `benchmark.config.json`.
+   *
+   * This should be the path to the file, not the directory.
+   */
+  configPath?: string
+  /**
+   * The filesystem module to use for file operations.
+   * This is primarily used for testing purposes. However, it can also be used to
+   * provide a custom implementation of the filesystem module (in a browser, for example).
+   * @default 'fs/promises'
+   */
+  fs?: {
+    readFile: (path: string, encoding: string) => Promise<string>
+    stat: (path: string) => Promise<{ isFile: () => boolean }>
+  }
+  /**
+   * The path module to use for path operations.
+   * This is primarily used for testing purposes. However, it can also be used to
+   * provide a custom implementation of the path module (in a browser, for example).
+   * @default 'path'
+   */
+  path?: {
+    join: (...paths: string[]) => string
+    dirname: (path: string) => string
+  }
+  /**
+   * Forces the config class to use the `fs` and `path` modules passed as options
+   * instead of the native modules.
+   * Note, this will perform validation of these properties and the config class
+   * will raise an error when `fs` and `path` are not set.
+   */
+  useSyntheticNodeModules?: boolean
 }
 
 export interface FieldValidationMessage {

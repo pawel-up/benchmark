@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
-import { CliReporter, type CliReporterOptions, type ColorThresholds } from '../src/reporters/cli_reporter.js'
+import { CliReporter, type CliReporterOptions, type ColorThresholds } from '../../../src/reporters/cli_reporter.js'
 import sinon from 'sinon'
-import type { BenchmarkReport, SuiteReport } from '../src/types.js'
+import type { BenchmarkReport, SuiteReport } from '../../../src/types.js'
 import { Logger, type ILogObj } from 'tslog'
 
 test.group('Cli Reporter', (group) => {

@@ -78,13 +78,6 @@ export class Benchmarker {
   protected logger: Logger<ILogObj>
 
   /**
-   * When set to true, the benchmark will run in debug mode.
-   * This mode is useful for debugging and development purposes.
-   * It may slow down the benchmark execution.
-   */
-  protected debug: boolean
-
-  /**
    * Creates a new Benchmarker instance.
    *
    * @param name - The name of the benchmark.
@@ -108,7 +101,6 @@ export class Benchmarker {
       timeThreshold = 1,
       minSamples = 10,
       maxIterations = 100,
-      debug = false,
     } = opts
     this.maxExecutionTime = maxExecutionTime
     this.warmupIterations = warmupIterations
@@ -117,7 +109,6 @@ export class Benchmarker {
     this.timeThreshold = timeThreshold
     this.minSamples = minSamples
     this.maxIterations = maxIterations
-    this.debug = debug
     this.logger = logger || createLogger(opts)
     this.logger.info(`Benchmarker "${this.name}" created with options:`, opts)
   }
@@ -296,23 +287,25 @@ export class Benchmarker {
     return averageTime
   }
 
+  #stddev: number | undefined
+
   /**
    * Calculates the standard deviation of the iteration times.
    *
    * @returns The standard deviation of the iteration times in milliseconds.
    */
   protected getStandardDeviation(): number {
+    if (this.#stddev !== undefined) {
+      // We cached the stddev value to avoid recalculating it multiple times
+      return this.#stddev
+    }
     const { results } = this
     if (!results.length) {
+      this.#stddev = 0
       return 0
     }
-    const standardDeviation = Statistics.sampleStandardDeviation(results)
-    if (standardDeviation === 0) {
-      this.logger.warn(
-        `Benchmark "${this.name}" standard deviation is zero. This is likely due to timer resolution limitations. Consider increasing 'timeThreshold' or 'innerIterations'.`
-      )
-    }
-    return standardDeviation
+    this.#stddev = Statistics.sampleStandardDeviation(results)
+    return this.#stddev
   }
 
   /**
