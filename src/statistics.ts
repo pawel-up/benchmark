@@ -80,37 +80,6 @@ export function calculateDegreesOfFreedom(s1: number, s2: number, n1: number, n2
   const s1SqOverN1 = s1Squared / n1
   return (s1SqOverN1 + s2Squared / n2) ** 2 / (s1SqOverN1 ** 2 / (n1 - 1) + (s2Squared / n2) ** 2 / (n2 - 1))
 }
-
-/**
- * Calculates the continued fraction for the Student's t-distribution cumulative probability.
- *
- * This function is a helper function used by `studT` to calculate the Student's t-distribution
- * cumulative probability. It computes a continued fraction that approximates the tail probability
- * of the t-distribution.
- *
- * The implementation is based on the algorithm described in:
- *
- * -   Hill, G. W. (1970). Algorithm 396: Student's t-quantiles. Communications of the ACM, 13(10), 619-620.
- *
- * @param q - A parameter derived from the t-statistic and degrees of freedom.
- * @param i - The starting index for the continued fraction calculation.
- * @param j - The ending index for the continued fraction calculation.
- * @param b - An offset value used in the continued fraction calculation.
- * @returns The value of the continued fraction.
- * @internal
- */
-function continuedFraction(q: number, i: number, j: number, b: number): number {
-  let zz = 1
-  let z = zz
-  let k = i
-  while (k <= j) {
-    zz = (zz * q * k) / (k - b)
-    z = z + zz
-    k = k + 2
-  }
-  return z
-}
-
 /**
  * Formats a number to ensure consistent p-value calculation.
  *
@@ -124,7 +93,7 @@ function continuedFraction(q: number, i: number, j: number, b: number): number {
  * @returns The formatted number.
  * @internal
  */
-function formatPValue(value: number): number {
+export function formatPValue(value: number): number {
   if (value >= 0) {
     return value + 0.0005
   }
@@ -132,34 +101,85 @@ function formatPValue(value: number): number {
 }
 
 /**
- * Calculates the Student's t-distribution cumulative probability.
- *
- * This function computes the one-tailed probability that a random variable
- * following a Student's t-distribution with `n` degrees of freedom is greater
- * than `t`. It is used internally by `calculatePValue` to determine the
- * p-value for a two-tailed t-test.
- *
- * The implementation is based on the algorithm described in:
- *
- * -   Hill, G. W. (1970). Algorithm 396: Student's t-quantiles. Communications of the ACM, 13(10), 619-620.
- *
- * @param tStat - The t-statistic (absolute value).
- * @param df - The degrees of freedom.
- * @returns The one-tailed probability (p-value).
- * @internal
+ * Regularized incomplete beta function (for t-distribution CDF).
+ * This is a simplified implementation for demonstration.
  */
-function studentsDistribution(tStat: number, df: number): number {
-  const w = Math.abs(tStat) / Math.sqrt(df)
-  const th = Math.atan(w)
-  if (df === 1) {
-    return 1 - th / (Math.PI / 2)
+function betacf(x: number, a: number, b: number): number {
+  // Continued fraction approximation (see Numerical Recipes)
+  const qab = a + b
+  const qap = a + 1
+  const qam = a - 1
+  let c = 1
+  let d = 1 - (qab * x) / qap
+  if (Math.abs(d) < 1e-30) d = 1e-30
+  d = 1 / d
+  let h = d
+  for (let m = 1, m2 = 2; m <= 100; m++, m2 += 2) {
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2))
+    d = 1 + aa * d
+    if (Math.abs(d) < 1e-30) d = 1e-30
+    c = 1 + aa / c
+    if (Math.abs(c) < 1e-30) c = 1e-30
+    d = 1 / d
+    h *= d * c
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2))
+    d = 1 + aa * d
+    if (Math.abs(d) < 1e-30) d = 1e-30
+    c = 1 + aa / c
+    if (Math.abs(c) < 1e-30) c = 1e-30
+    d = 1 / d
+    const del = d * c
+    h *= del
+    if (Math.abs(del - 1) < 3e-7) break
   }
-  const sth = Math.sin(th)
-  const cth = Math.cos(th)
-  if (df % 2 === 1) {
-    return 1 - (th + sth ** 2 * continuedFraction(cth ** 2, 2, df - 3, -1)) / (Math.PI / 2)
+  return h
+}
+
+function logGamma(z: number): [number, number] {
+  // Lanczos approximation
+  const cof = [
+    76.18009172947146, -86.5053203294167, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2,
+    -0.5395239384953e-5,
+  ]
+  const x = z
+  let y = x
+  let tmp = x + 5.5
+  tmp -= (x + 0.5) * Math.log(tmp)
+  let ser = 1.000000000190015
+  for (const item of cof) {
+    y += 1
+    ser += item / y
   }
-  return 1 - sth * continuedFraction(cth ** 2, 1, df - 3, -1)
+  return [Math.log((2.506628274631 * ser) / x) - tmp, 0]
+}
+
+function logBeta(a: number, b: number): number {
+  return logGamma(a)[0] + logGamma(b)[0] - logGamma(a + b)[0]
+}
+
+function betaIncomplete(x: number, a: number, b: number): number {
+  // Regularized incomplete beta function
+  const bt = x === 0 || x === 1 ? 0 : Math.exp(a * Math.log(x) + b * Math.log(1 - x) - logBeta(a, b))
+  if (x < (a + 1) / (a + b + 2)) {
+    return (bt * betacf(x, a, b)) / a
+  } else {
+    return 1 - (bt * betacf(1 - x, b, a)) / b
+  }
+}
+
+/**
+ * Student's t-distribution CDF.
+ */
+function tCDF(t: number, df: number): number {
+  const x = df / (df + t * t)
+  const a = df / 2
+  const b = 0.5
+  const ib = betaIncomplete(x, a, b)
+  if (t >= 0) {
+    return 1 - 0.5 * ib
+  } else {
+    return 0.5 * ib
+  }
 }
 
 /**
@@ -181,8 +201,8 @@ export function calculatePValue(tStat: number, df: number): number {
   if (df <= 0) {
     throw new Error('Degrees of freedom must be greater than 0.')
   }
-  const st = studentsDistribution(tStat, df)
-  return formatPValue(st)
+  const p = 2 * (1 - tCDF(Math.abs(tStat), df))
+  return p
 }
 
 /**
