@@ -78,13 +78,6 @@ export class Benchmarker {
   protected logger: Logger<ILogObj>
 
   /**
-   * When set to true, the benchmark will run in debug mode.
-   * This mode is useful for debugging and development purposes.
-   * It may slow down the benchmark execution.
-   */
-  protected debug: boolean
-
-  /**
    * Creates a new Benchmarker instance.
    *
    * @param name - The name of the benchmark.
@@ -108,7 +101,6 @@ export class Benchmarker {
       timeThreshold = 1,
       minSamples = 10,
       maxIterations = 100,
-      debug = false,
     } = opts
     this.maxExecutionTime = maxExecutionTime
     this.warmupIterations = warmupIterations
@@ -117,7 +109,6 @@ export class Benchmarker {
     this.timeThreshold = timeThreshold
     this.minSamples = minSamples
     this.maxIterations = maxIterations
-    this.debug = debug
     this.logger = logger || createLogger(opts)
     this.logger.info(`Benchmarker "${this.name}" created with options:`, opts)
   }

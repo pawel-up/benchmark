@@ -66,7 +66,6 @@ test.group('Benchmarker', () => {
       maxInnerIterations: 50,
       timeThreshold: 0.5,
       minSamples: 5,
-      debug: true,
       logLevel: 5,
     }
     const benchmarker = new Benchmarker('Options Benchmark', () => {}, options)
