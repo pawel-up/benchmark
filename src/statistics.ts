@@ -104,7 +104,7 @@ export function formatPValue(value: number): number {
  * Regularized incomplete beta function (for t-distribution CDF).
  * This is a simplified implementation for demonstration.
  */
-function betacf(x: number, a: number, b: number): number {
+function regularizedIncompleteBeta(x: number, a: number, b: number): number {
   // Continued fraction approximation (see Numerical Recipes)
   const qab = a + b
   const qap = a + 1
@@ -161,16 +161,24 @@ function betaIncomplete(x: number, a: number, b: number): number {
   // Regularized incomplete beta function
   const bt = x === 0 || x === 1 ? 0 : Math.exp(a * Math.log(x) + b * Math.log(1 - x) - logBeta(a, b))
   if (x < (a + 1) / (a + b + 2)) {
-    return (bt * betacf(x, a, b)) / a
+    return (bt * regularizedIncompleteBeta(x, a, b)) / a
   } else {
-    return 1 - (bt * betacf(1 - x, b, a)) / b
+    return 1 - (bt * regularizedIncompleteBeta(1 - x, b, a)) / b
   }
 }
 
 /**
- * Student's t-distribution CDF.
+ * Evaluates the cumulative distribution function (CDF) for
+ * a Student's t distribution with degrees of freedom `df` at a value `t`.
+ *
+ * @param t - input value
+ * @param df - degrees of freedom
+ * @returns {Probability} evaluated CDF
  */
 function tCDF(t: number, df: number): number {
+  if (t === 0.0) {
+    return 0.5
+  }
   const x = df / (df + t * t)
   const a = df / 2
   const b = 0.5

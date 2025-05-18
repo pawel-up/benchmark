@@ -37,6 +37,18 @@ test.group('Suite', (group) => {
     assert.equal(passedReporter[0].reporter, reporter)
   })
 
+  test('throws when invalid reporter timing', async ({ assert }) => {
+    const suite = new Suite('Test Suite')
+    const reporter = new (class TestReporter extends Reporter {
+      async run(): Promise<void> {}
+    })()
+    assert.throws(
+      // @ts-expect-error Testing invalid timing
+      () => suite.addReporter(reporter, 'invalid-timing'),
+      `Invalid timing "invalid-timing" for reporter "${reporter.constructor.name}".`
+    )
+  })
+
   test('should set the setup function', async ({ assert }) => {
     const suite = new Suite('Test Suite')
     const setupFn = () => {}
@@ -117,6 +129,19 @@ test.group('Suite', (group) => {
     suite.add('Benchmark', benchmarkFn)
     await suite.run()
     assert.isTrue(reporter.run.calledOnce)
+  })
+
+  test('initializes reporters when the initialize function is defined', async ({ assert }) => {
+    const suite = new Suite('Test Suite', { maxIterations: 1, maxInnerIterations: 1, maxExecutionTime: 2 })
+    const reporter = new (class TestReporter extends Reporter {
+      run = sinon.stub().resolves()
+      override initialize = sinon.stub().resolves()
+    })()
+    const benchmarkFn = sinon.stub().resolves()
+    suite.addReporter(reporter, 'after-all')
+    suite.add('Benchmark', benchmarkFn)
+    await suite.run()
+    assert.isTrue(reporter.initialize.calledOnce)
   })
 
   test('should dispatch before-run and after-run events', async ({ assert }) => {
@@ -450,5 +475,22 @@ test.group('Suite', (group) => {
     // Check that the benchmark setup value is passed to the benchmark function
     assert.deepEqual(benchmarkFn1.firstCall.args[0], 'benchmarkSetup')
     assert.deepEqual(benchmarkFn2.firstCall.args[0], 'benchmarkSetup')
+  })
+
+  test('loads the configuration', async ({ assert }) => {
+    const suite = new Suite()
+    const spy = sinon.spy(suite['options'], 'load')
+    await suite.load()
+    assert.isTrue(spy.calledOnce)
+    assert.isTrue(suite['configLoaded'])
+  })
+
+  test('loads the configuration only once', async ({ assert }) => {
+    const suite = new Suite()
+    const spy = sinon.spy(suite['options'], 'load')
+    await suite.load()
+    await suite.load()
+    assert.isTrue(spy.calledOnce)
+    assert.isTrue(suite['configLoaded'])
   })
 })
