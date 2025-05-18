@@ -77,13 +77,13 @@ export class Suite extends EventTarget {
   /**
    * The benchmark execution queue.
    */
-  private benchmarks: BenchmarkSuiteEntry[] = []
-  private reports: BenchmarkReport[] = []
-  private options: SuiteConfig
+  protected benchmarks: BenchmarkSuiteEntry[] = []
+  protected reports: BenchmarkReport[] = []
+  protected options: SuiteConfig
   /**
    * Registered reporters for the suite.
    */
-  private reporters: Map<ReporterExecutionTiming, SuiteReporterEntry[]> = new Map<
+  protected reporters: Map<ReporterExecutionTiming, SuiteReporterEntry[]> = new Map<
     ReporterExecutionTiming,
     SuiteReporterEntry[]
   >()
@@ -91,32 +91,32 @@ export class Suite extends EventTarget {
    * The global setup function to be queued in the execution queue.
    * The author has to call the `setup()` method to add it to the execution queue.
    */
-  private benchmarkSetup: BenchmarkFunction | null = null
+  protected benchmarkSetup: BenchmarkFunction | null = null
   /**
    * A list of groups and their corresponding benchmark setup functions.
    * Keys are group names, values are setup functions.
    */
-  private groupBenchmarkSetup = new Map<string, BenchmarkFunction>()
+  protected groupBenchmarkSetup = new Map<string, BenchmarkFunction>()
   /**
    * A list of groups and their corresponding benchmark teardown functions.
    * Keys are group names, values are teardown functions.
    */
-  private groupBenchmarkTeardown = new Map<string, BenchmarkFunction>()
+  protected groupBenchmarkTeardown = new Map<string, BenchmarkFunction>()
   /**
    * A list of groups and their corresponding suite setup functions.
    * Keys are group names, values are setup functions.
    */
-  private groupSuiteSetup = new Map<string, BenchmarkFunction>()
+  protected groupSuiteSetup = new Map<string, BenchmarkFunction>()
   /**
    * A list of groups and their corresponding suite teardown functions.
    * Keys are group names, values are teardown functions.
    */
-  private groupSuiteTeardown = new Map<string, BenchmarkFunction>()
+  protected groupSuiteTeardown = new Map<string, BenchmarkFunction>()
   /**
    * The name of the benchmark suite.
    * This is used for logging and reporting purposes.
    */
-  private name: string
+  protected name: string
 
   /**
    * Logger instance for logging messages.
@@ -134,7 +134,7 @@ export class Suite extends EventTarget {
   /**
    * Keeps track of the first and last benchmark index for each group.
    */
-  private groupIndex: Map<string, { first: BenchmarkSuiteEntry; last: BenchmarkSuiteEntry }> = new Map<
+  protected groupIndex: Map<string, { first: BenchmarkSuiteEntry; last: BenchmarkSuiteEntry }> = new Map<
     string,
     { first: BenchmarkSuiteEntry; last: BenchmarkSuiteEntry }
   >()
@@ -143,13 +143,19 @@ export class Suite extends EventTarget {
    * It is a map of group names and their corresponding values created by the group setup function.
    * The values are passed to the benchmark setup function as the only argument.
    */
-  private groupGlobalSetupValues: Map<string, unknown> = new Map<string, unknown>()
+  protected groupGlobalSetupValues: Map<string, unknown> = new Map<string, unknown>()
 
   /**
    * When the `setup()` method is called, the setup function is hold in here.
    * After the next benchmark is added, the setup function is then added as a property to the benchmark.
    */
-  private pendingSetup?: BenchmarkFunction
+  protected pendingSetup?: BenchmarkFunction
+
+  /**
+   * A flag to indicate if the configuration has been loaded.
+   * This is used to prevent loading the configuration multiple times.
+   */
+  protected configLoaded = false
 
   /**
    * Creates a new benchmark suite.
@@ -196,8 +202,6 @@ export class Suite extends EventTarget {
     this.logger.info(`Benchmarker "${this.name}" created with options:`, this.options)
   }
 
-  #loaded = false
-
   /**
    * Initializes the configuration of the suite.
    * This step is optional and called automatically when the suite is run.
@@ -211,11 +215,11 @@ export class Suite extends EventTarget {
    * @returns A promise that resolves when the configuration is loaded.
    */
   async load(): Promise<void> {
-    if (this.#loaded) {
+    if (this.configLoaded) {
       this.logger.debug(`Configuration for suite "${this.name}" already loaded`)
       return
     }
-    this.#loaded = true
+    this.configLoaded = true
     this.logger.debug(`Loading configuration for suite "${this.name}"`)
     await this.options.load()
   }
@@ -545,7 +549,7 @@ export class Suite extends EventTarget {
     return this.getReport()
   }
 
-  private async initializeReporters(): Promise<void> {
+  protected async initializeReporters(): Promise<void> {
     this.logger.debug(`Initializing reporters for suite "${this.name}"`)
     const init: ReportBenchmarkInit[] = []
     for (const benchmark of this.benchmarks) {
@@ -571,7 +575,7 @@ export class Suite extends EventTarget {
    * @param timing - The timing for which to run the reporters.
    * @param data - The data to pass to the reporters.
    */
-  private async runReporters(timing: ReporterExecutionTiming, data: BenchmarkReport | SuiteReport): Promise<void> {
+  protected async runReporters(timing: ReporterExecutionTiming, data: BenchmarkReport | SuiteReport): Promise<void> {
     this.logger.debug(`Running reporters with timing "${timing}" for suite "${this.name}"`)
     const list = this.reporters.get(timing)
     if (!list) {
