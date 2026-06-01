@@ -232,6 +232,67 @@ By using a statistical approach, `@pawel-up/benchmark` helps you make data-drive
 * `date: string`
 * `results: BenchmarkReport[]`
 
+## Browser Support
+
+`@pawel-up/benchmark` ships a dedicated browser entry point that excludes all Node.js-only APIs (`fs`, `path`, `FileReporter`, `FileStore`).
+
+### Importing in a browser project
+
+```typescript
+// Explicit browser import — always resolves to the browser bundle
+import { Suite, Benchmarker, SuiteConfig, BrowserReporter } from '@pawel-up/benchmark/browser';
+```
+
+If you use a bundler (Vite, Rollup, webpack) that respects the `exports` `"browser"` condition, the default import path also works:
+
+```typescript
+// Automatically resolved to the browser bundle by your bundler
+import { Suite, Benchmarker, BrowserReporter } from '@pawel-up/benchmark';
+```
+
+### `BrowserReporter`
+
+`BrowserReporter` is the browser counterpart to `CliReporter`. It uses CSS-styled `console.log`, `console.group`, and `console.table` — no terminal dependencies.
+
+```typescript
+import { Suite, BrowserReporter } from '@pawel-up/benchmark/browser';
+
+const suite = new Suite('My Suite');
+suite.add('Array.from', () => Array.from({ length: 1000 }));
+suite.add('spread', () => [...Array(1000)]);
+suite.addReporter(new BrowserReporter({ format: 'short' }), 'after-each');
+
+await suite.run();
+```
+
+Output formats:
+
+* **`short`** (default) — one styled line per benchmark with color-coded RME (green / yellow / red).
+* **`long`** — `console.group` header, `console.table` with numeric metrics, and separate color-coded lines for RME, standard deviation, and margin of error.
+
+### What is available in the browser bundle
+
+| Export | Available |
+| --- | --- |
+| `Benchmarker` | ✅ |
+| `Suite` | ✅ |
+| `SuiteConfig` | ✅ |
+| `BrowserReporter` | ✅ |
+| `Reporter` (base class) | ✅ |
+| `compare` / `compareFunction` / `compareSuites` | ✅ |
+| All TypeScript types | ✅ |
+| `CliReporter` | ❌ Node only |
+| `FileReporter` | ❌ Node only |
+| `FileStore` | ❌ Node only |
+
+### Node.js explicit import
+
+When writing Node.js scripts that should never accidentally pick up the browser bundle:
+
+```typescript
+import { Suite, CliReporter, FileReporter, FileStore } from '@pawel-up/benchmark/node';
+```
+
 ## Learn More
 
 * Interpreting Benchmark Results
