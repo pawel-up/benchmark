@@ -19,7 +19,6 @@
     "inlineSources": true,
     "outDir": "./build",
     "rootDir": "./.",
-    "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
     "importHelpers": false,
     "declaration": true,
@@ -27,10 +26,14 @@
     "pretty": true,
     "skipLibCheck": true,
     "incremental": true,
+    "types": ["@types/node"],
   },
+  "exclude": ["dist", "node_modules", "coverage", "docs"],
   "include": [
     "src/**/*",
-    "src/index.ts"
+    "src/index.ts",
+    "tests/**/*.ts",
+    "bin/**/*.ts"
   ],
   "ts-node": {
     "experimentalSpecifierResolution": "node",
