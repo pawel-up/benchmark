@@ -281,8 +281,8 @@ export class SuiteConfig {
       }
       return result
     }
-    const path = this.initOptions.path || (await import('path'))
-    const fs = this.initOptions.fs || (await import('fs/promises'))
+    const path = this.initOptions.path || (await import(/* @vite-ignore */ /* webpackIgnore: true */ 'path'))
+    const fs = this.initOptions.fs || (await import(/* @vite-ignore */ /* webpackIgnore: true */ 'fs/promises'))
     let currentDir = process.cwd()
     while (currentDir) {
       for (const file of this.files) {
@@ -317,7 +317,7 @@ export class SuiteConfig {
       return config
     }
     if (info.type === 'json') {
-      const fs = this.initOptions.fs || (await import('fs/promises'))
+      const fs = this.initOptions.fs || (await import(/* @vite-ignore */ /* webpackIgnore: true */ 'fs/promises'))
       const data = await fs.readFile(info.path, 'utf-8')
       return JSON.parse(data)
     }

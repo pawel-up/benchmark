@@ -7,6 +7,26 @@
   "module": "./build/src/index.js",
   "types": "./build/src/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./build/src/browser.d.ts",
+        "default": "./build/src/browser.js"
+      },
+      "default": {
+        "types": "./build/src/index.d.ts",
+        "default": "./build/src/index.js"
+      }
+    },
+    "./browser": {
+      "types": "./build/src/browser.d.ts",
+      "default": "./build/src/browser.js"
+    },
+    "./node": {
+      "types": "./build/src/index.d.ts",
+      "default": "./build/src/index.js"
+    }
+  },
   "keywords": [
     "benchmark",
     "testing"
