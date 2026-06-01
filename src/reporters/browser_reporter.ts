@@ -1,6 +1,8 @@
 import type { BenchmarkReport, SuiteReport } from '../types.js'
 import { Reporter, type ReporterInit } from './reporter.js'
 import { validateBenchmarkReport } from '../validators.js'
+import type { Logger, ILogObj } from 'tslog'
+import { createLogger } from '../logger.js'
 
 export interface BrowserReporterOptions {
   /**
@@ -81,11 +83,16 @@ export class BrowserReporter extends Reporter {
   protected rmeColorThresholds: ColorThresholds
   protected stdDevAndMoeColorThresholds: ColorThresholds
   protected namePadding = 25
+  protected logger: Logger<ILogObj>
 
-  constructor(protected options: BrowserReporterOptions = {}) {
+  constructor(
+    protected options: BrowserReporterOptions = {},
+    logger?: Logger<ILogObj>
+  ) {
     super()
     this.rmeColorThresholds = options.rmeColorThresholds ?? { yellow: 0.05, red: 0.1 }
     this.stdDevAndMoeColorThresholds = options.stdDevAndMoeColorThresholds ?? { yellow: 0.01, red: 0.05 }
+    this.logger = logger ?? createLogger({ debug: false, logLevel: 5 })
   }
 
   override async initialize(init: ReporterInit): Promise<void> {
@@ -191,11 +198,17 @@ export class BrowserReporter extends Reporter {
     console.groupEnd()
   }
 
-  protected isValidReport(report: BenchmarkReport): boolean {
+  /**
+   * Validates a benchmark report before rendering it.
+   * Logs a `console.error` message describing each violation when the report is invalid.
+   *
+   * @param report - The report to validate.
+   * @returns `true` if the report is valid, `false` otherwise.
+   */
+  public isValidReport(report: BenchmarkReport): boolean {
     const issues = validateBenchmarkReport(report)
     if (issues.length > 0) {
-      // eslint-disable-next-line no-console
-      console.error('Invalid benchmark report:', issues.map((i) => i.message).join(' '))
+      this.logger.error('Invalid report:', issues.map((i) => i.message).join(' '))
       return false
     }
     return true
