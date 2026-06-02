@@ -1,5 +1,9 @@
 name: CI
 
+# Forces color so that tests passes for the CLI reporter
+env:
+  FORCE_COLOR: "1" 
+
 on:
   push:
     branches:

@@ -1,6 +1,7 @@
 import type { LupaPlugin, TestSuite } from '@pawel-up/lupa/runner'
 import { CliReporter } from '../reporters/cli_reporter.js'
 import type { BenchmarkReport, SuiteReport } from '../types.js'
+import type {} from './types.js'
 
 /**
  * Returns true when a suite should be treated as a benchmark suite.
@@ -47,6 +48,7 @@ export function benchmarkPlugin(): LupaPlugin {
         if (isBenchmarkSuite(suite)) {
           suite.priority = 50
           suite.disableInWatchMode = true
+          suite.excludeFromReporting = true
         }
       }
     },
@@ -54,16 +56,11 @@ export function benchmarkPlugin(): LupaPlugin {
     execute({ emitter }) {
       const reporter = new CliReporter({ format: 'short' })
 
-      // Cast to any: custom events are not in RunnerEvents until the consumer
-      // adds the type augmentation via @pawel-up/benchmark/lupa/types.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = emitter as any
-
-      e.on('benchmark:result', (report: BenchmarkReport) => {
+      emitter.on('benchmark:result', (report: BenchmarkReport) => {
         void reporter.run(report)
       })
 
-      e.on('benchmark:suite:end', (report: SuiteReport) => {
+      emitter.on('benchmark:suite:end', (report: SuiteReport) => {
         void reporter.run(report)
       })
     },

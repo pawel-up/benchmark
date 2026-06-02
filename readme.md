@@ -361,15 +361,6 @@ Lupa executes suites in descending priority order (default: `100`). The plugin s
 
 Benchmark suites are automatically skipped during `lupa test --watch`. The plugin sets `disableInWatchMode: true` on all detected benchmark suites, keeping the watch feedback loop fast.
 
-### TypeScript: typed IPC events (optional)
-
-For full TypeScript safety on the custom IPC events, reference the ambient type declaration in your project's `env.d.ts`:
-
-```typescript
-// env.d.ts
-/// <reference types="@pawel-up/benchmark/lupa/types" />
-```
-
 This augments Lupa's `RunnerEvents` with `benchmark:result` and `benchmark:suite:end`, enabling type-safe access if you subscribe to those events in your own plugins.
 
 ## Learn More
