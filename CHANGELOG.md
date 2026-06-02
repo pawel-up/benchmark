@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/pawel-up/benchmark/compare/v1.1.0...v1.1.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* fixing nyc dependency ([04167b7](https://github.com/pawel-up/benchmark/commit/04167b70186939f4a5299e2a3be8f56d0adb1e3d))
+
 # [1.1.0](https://github.com/pawel-up/benchmark/compare/v1.0.5...v1.1.0) (2026-06-02)
 
 
