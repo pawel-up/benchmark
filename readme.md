@@ -293,6 +293,85 @@ When writing Node.js scripts that should never accidentally pick up the browser 
 import { Suite, CliReporter, FileReporter, FileStore } from '@pawel-up/benchmark/node';
 ```
 
+## Lupa Integration
+
+`@pawel-up/benchmark` ships first-class integration with the [Lupa](https://github.com/pawel-up/lupa) browser test framework. Benchmarks run in the browser alongside your tests, and results are forwarded over Lupa's IPC channel to Node where they are printed to the terminal via `CliReporter`.
+
+### How it works
+
+The integration is two Lupa plugins that work together:
+
+* **`@pawel-up/benchmark/lupa/browser`** — a Lupa `testPlugin` that runs in the browser. It wires the Lupa emitter into the benchmark module so that every `createSuite()` result automatically forwards benchmark data to Node over the Vite WebSocket channel.
+* **`@pawel-up/benchmark/lupa/node`** — a Lupa `runnerPlugin` that runs in the Node orchestrator. Its `plan` hook auto-configures benchmark suites with a lower execution priority and disables them in watch mode. Its `execute` hook receives the forwarded results and prints them with `CliReporter`.
+
+### Installation
+
+```bash
+npm install --save-dev @pawel-up/benchmark
+```
+
+### Recommended: suites-based config
+
+The recommended pattern is to declare benchmarks as a separate named suite. This keeps benchmarks opt-in — they only run when you include the `benchmarks` suite, making them easy to gate behind CI or run on demand without changing any source files.
+
+```typescript
+// lupa.config.ts
+import { defineConfig } from '@pawel-up/lupa'
+import { benchmarkPlugin } from '@pawel-up/benchmark/lupa/node'
+
+export default defineConfig({
+  suites: [
+    { name: 'unit',       files: ['tests/**/*.spec.ts'] },
+    { name: 'functional', files: ['tests/**/*.functional.ts'] },
+    { name: 'benchmarks', files: ['tests/**/*.benchmark.ts'] },
+    // priority: 50 and disableInWatchMode: true are set automatically
+    // by benchmarkPlugin for any suite named 'benchmark'/'benchmarks'
+    // or whose file pattern contains '.benchmark.'
+  ],
+  runnerPlugins: [benchmarkPlugin()],
+  testPlugins: ['@pawel-up/benchmark/lupa/browser'],
+})
+```
+
+Run only the benchmark suite on demand:
+
+```bash
+lupa test --suite benchmarks
+```
+
+### Writing benchmark files
+
+Use `createSuite` from `@pawel-up/benchmark/lupa` instead of `new Suite()`. It pre-wires the `LupaReporter` so results are forwarded automatically:
+
+```typescript
+// tests/array.benchmark.ts
+import { createSuite } from '@pawel-up/benchmark/lupa'
+
+const suite = createSuite('Array creation')
+suite.add('Array.from', () => Array.from({ length: 1_000 }))
+suite.add('spread',     () => [...Array(1_000)])
+await suite.run()
+```
+
+### Execution order
+
+Lupa executes suites in descending priority order (default: `100`). The plugin sets benchmark suites to `priority: 50`, so they always run **after** all regular test suites finish. Terminal output flows naturally: test results appear first, then benchmark results.
+
+### Watch mode
+
+Benchmark suites are automatically skipped during `lupa test --watch`. The plugin sets `disableInWatchMode: true` on all detected benchmark suites, keeping the watch feedback loop fast.
+
+### TypeScript: typed IPC events (optional)
+
+For full TypeScript safety on the custom IPC events, reference the ambient type declaration in your project's `env.d.ts`:
+
+```typescript
+// env.d.ts
+/// <reference types="@pawel-up/benchmark/lupa/types" />
+```
+
+This augments Lupa's `RunnerEvents` with `benchmark:result` and `benchmark:suite:end`, enabling type-safe access if you subscribe to those events in your own plugins.
+
 ## Learn More
 
 * Interpreting Benchmark Results
