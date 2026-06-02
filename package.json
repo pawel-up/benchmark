@@ -25,6 +25,18 @@
     "./node": {
       "types": "./build/src/index.d.ts",
       "default": "./build/src/index.js"
+    },
+    "./lupa": {
+      "types": "./build/src/lupa/index.d.ts",
+      "default": "./build/src/lupa/index.js"
+    },
+    "./lupa/browser": {
+      "types": "./build/src/lupa/browser_plugin.d.ts",
+      "default": "./build/src/lupa/browser_plugin.js"
+    },
+    "./lupa/node": {
+      "types": "./build/src/lupa/node_plugin.d.ts",
+      "default": "./build/src/lupa/node_plugin.js"
     }
   },
   "keywords": [
@@ -67,18 +79,27 @@
     "console-table-printer": "^2.12.1",
     "tslog": "^4.9.3"
   },
+  "peerDependencies": {
+    "@pawel-up/lupa": ">=0.3.8"
+  },
+  "peerDependenciesMeta": {
+    "@pawel-up/lupa": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
     "@commitlint/types": "^21.0.1",
-    "@eslint/js": "^9.25.0",
+    "@eslint/js": "^10.0.1",
     "@japa/assert": "^4.0.1",
-    "@japa/runner": "^4.2.0",
+    "@japa/runner": "^5.3.0",
+    "@pawel-up/lupa": "^0.3.8",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@types/sinon": "^17.0.4",
     "@types/node": "^25.7.0",
-    "c8": "^10.1.3",
+    "@types/sinon": "^21.0.1",
+    "c8": "^11.0.0",
     "eslint": "^10.1.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-no-only-tests": "^3.3.0",
@@ -89,9 +110,9 @@
     "lint-staged": "^17.0.5",
     "prettier": "^3.7.3",
     "semantic-release": "^25.0.3",
-    "sinon": "^20.0.0",
-    "tsx": "^4.21.0",
+    "sinon": "^22.0.0",
     "ts-node-maintained": "^10.9.5",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.48.0"
   },
