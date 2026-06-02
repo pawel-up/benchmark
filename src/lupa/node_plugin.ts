@@ -9,7 +9,7 @@ import type {} from './types.js'
  * pattern containing '.benchmark.' (only for string/string[] file specs).
  */
 function isBenchmarkSuite(suite: Required<TestSuite>): boolean {
-  const name = suite.name.toLowerCase()
+  const name = suite.name?.toLowerCase()
   if (name === 'benchmark' || name === 'benchmarks') return true
   if (typeof suite.files === 'string') return suite.files.includes('.benchmark.')
   if (Array.isArray(suite.files)) return suite.files.some((f) => f.includes('.benchmark.'))
