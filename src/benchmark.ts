@@ -153,7 +153,7 @@ export class Benchmarker {
     // Adaptive innerIterations
     this.logger.debug(`Starting adaptive inner iterations phase`)
     let adaptiveInnerIterations = this.innerIterations
-    let totalTime = 0
+    let totalTime: number
     do {
       const startTime = performance.now()
       for (let j = 0; j < adaptiveInnerIterations; j++) {
